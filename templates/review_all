@@ -57,7 +57,7 @@ function updateExpertiseBadge(proposalID) {
     if (currentExpertise == '') {
         badge.addClass('badge-secondary');
         badge.removeClass('badge-success');
-        badge.html('✘ No comments');
+        badge.html('✘ Expertise missing');
     } else {
         badge.removeClass('badge-secondary');
         badge.addClass('badge-success');

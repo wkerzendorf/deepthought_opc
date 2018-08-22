@@ -37,16 +37,18 @@ class DTOPC(object):
         cherrypy.session.load()
         if cherrypy.session.get('ref_id', None) is not None:
             return self.display(cherrypy.session['ref_id'])
+        available_referees = [item[0] for item in self.db.query(Referee.uuid).all()]
         return """<html>
           <head></head>
           <body>
             <form method="get" action="display">
-              <input type="text" value="8" name="ref_id" />
+              <input type="text" value="{0}" name="ref_id" />
               <button type="submit">Give it now!</button>
             </form>
-            {0}
+            available referee ids
+            {1}
           </body>
-        </html>""".format(str(self.db.query(Referee.uuid).all()))
+        </html>""".format(available_referees[3], str(available_referees))
 
     @cherrypy.expose
     def display(self, ref_id):
