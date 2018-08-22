@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -5,6 +6,10 @@ from alchemy import Referee, Base, Proposal
 import cherrypy
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
+from jinja2 import Environment, FileSystemLoader
+
+path = os.path.abspath(os.path.dirname(__file__))
+env = Environment(loader=FileSystemLoader(os.path.join(path, 'templates')))
 
 class DTOPC(object):
     _cp_config = {'tools.sessions.on': True, 
@@ -45,8 +50,10 @@ class DTOPC(object):
     @cherrypy.expose
     def display(self, ref_id):
         cherrypy.session['ref_id'] = ref_id
-        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-        return 'this is it '  + str([item.title for item in referee.proposals])
+        reviews = self.db.query(Referee).filter_by(uuid=ref_id).one().reviews
+        template = env.get_template('review_all')
+
+        return template.render(reviews=reviews)
 
 
 
@@ -58,6 +65,15 @@ if __name__ == '__main__':
             'server.socket_port' : 8081,
             'server.thread_pool' : 8
         },
+        '/css' : {
+            'tools.staticdir.on'  : True,
+            'tools.staticdir.dir' : os.path.join(path, 'css')
+        },
+        '/js' : {
+            'tools.staticdir.on'  : True,
+            'tools.staticdir.dir' : os.path.join(path, 'js')
+        },
+
 
     }
     cherrypy.tools.db = SQLAlchemyTool()

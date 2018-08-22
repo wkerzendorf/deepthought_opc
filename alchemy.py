@@ -54,6 +54,9 @@ class Review(Base):
     score = Column(Float)
     last_updated = Column(DateTime, onupdate=datetime.datetime.now)
 
+    proposal = relationship('Proposal')
+    referee = relationship('Referee')
+
 
 
 

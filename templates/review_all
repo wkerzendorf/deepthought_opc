@@ -80,7 +80,7 @@ $(document).ready(function () {
         <h1>Deepthought OPC</h1>
     </div>
     <div class="row">
-        <div class="col-8 offset-md-2">
+        <div class="col-10 offset-md-1">
             <div>
                 {# alerts will go here #}
             </div>
@@ -125,16 +125,16 @@ $(document).ready(function () {
 
                     <div class="form-group">
                         <label for="comment{{ review.proposal.id }}">Comments</label>
-                        <textarea class="form-control" id="comment{{ review.proposal.id }}" name="comment{{ review.proposal.id }}" rows="3" onchange="updateCommentsBadge({{ review.proposal.id }});" onkeyup="updateCommentsBadge({{ review.proposal.id }});">{{ review.comment }}</textarea>
+                        <textarea class="form-control" id="comment{{ review.proposal.id }}" name="comment{{ review.proposal.id }}" rows="3" onchange="updateCommentsBadge({{ review.proposal.id }});" onkeyup="updateCommentsBadge({{ review.proposal.id }});">{% if review.comment != None%}{{ review.comment }}{% endif %}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="ref_knowledge{{ review.proposal.id }}">Your Expertise</label>
                         <select class="form-control" id="ref_knowledge{{ review.proposal.id }}" name="ref_knowledge{{ review.proposal.id }}" onchange="updateExpertiseBadge({{ review.proposal.id }});">
                             <option value="">Please choose one</option>
-                            <option value="1" {% if review.ref_knowledge = 1 %}selected{% endif %}>(1) This is my field of expertise.</option>
-                            <option value="2" {% if review.ref_knowledge = 2 %}selected{% endif %}>(2) I have some general knowledge of this field.</option>
-                            <option value="3" {% if review.ref_knowledge = 3 %}selected{% endif %}>(3) I have little or no knowledge of this field.</option>
+                            <option value="1" {% if review.ref_knowledge == 1 %}selected{% endif %}>(1) This is my field of expertise.</option>
+                            <option value="2" {% if review.ref_knowledge == 2 %}selected{% endif %}>(2) I have some general knowledge of this field.</option>
+                            <option value="3" {% if review.ref_knowledge == 3 %}selected{% endif %}>(3) I have little or no knowledge of this field.</option>
                         </select>
                     </div>
                     </div> {# /.card-body #}
