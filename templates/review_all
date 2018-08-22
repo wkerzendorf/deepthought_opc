@@ -83,46 +83,46 @@ function updateExpertiseBadge(proposalID) {
             
             <div class="accordion" id="proposalsAccordion">
             
-            {% for proposal in proposals %}
+            {% for review in reviews %}
 
             <div class="card">
-                <div class="card-header" id="heading1">
+                <div class="card-header" id="heading{{ review.proposal.id }}">
                     <div class="row">
                     <div class="col-5">
                     <h5 class="mb-0" style="display: inline-block;">
-                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
-                        #1: Title Goes Here
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse{{ review.proposal.id }}" aria-expanded="true" aria-controls="collapse{{ review.proposal.id }}">
+                        {{ review.proposal.eso_id }}: {{ review.proposal.title }}
                     </button>
                     </h5>
                     </div>
 
                     <div class="col-7 text-right" style="padding-top: .5em;">
-                    <span class="badge badge-secondary" id="badgeScore1">✘ No score</span>
-                    <span class="badge badge-secondary" id="badgeComments1">✘ No comments</span>
-                    <span class="badge badge-secondary" id="badgeExpertise1">✘ No expertise</span>
+                    <span class="badge badge-secondary" id="badgeScore{{ review.proposal.id }}">✘ No score</span>
+                    <span class="badge badge-secondary" id="badgeComments{{ review.proposal.id }}">✘ No comments</span>
+                    <span class="badge badge-secondary" id="badgeExpertise{{ review.proposal.id }}">✘ No expertise</span>
                     </div>
                     </div>
                 </div>
             
-                <div id="collapse1" class="collapse" aria-labelledby="heading1" data-parent="#proposalsAccordion">
+                <div id="collapse{{ review.proposal.id }}" class="collapse" aria-labelledby="heading{{ review.proposal.id }}" data-parent="#proposalsAccordion">
                     <div class="card-body">
-                    <p>{{ }}</p>
+                    <p>{{ review.proposal.abstract }}</p>
 
                     <p><a href="#">View Proposal PDF</a></p>
 
                     <div class="form-group">
-                        <label for="score1">Proposal Score</label>
-                        <input type="number" class="form-control" id="score1" name="score1" placeholder="0.0 - 5.0" step="0.1" min="0" max="5" onchange="updateScoreBadge(1);" onkeyup="updateScoreBadge(1);">
+                        <label for="score{{ review.proposal.id }}">Proposal Score</label>
+                        <input type="number" class="form-control" id="score{{ review.proposal.id }}" name="score{{ review.proposal.id }}" placeholder="0.0 - 5.0" step="0.1" min="0" max="5" onchange="updateScoreBadge({{ review.proposal.id }});" onkeyup="updateScoreBadge({{ review.proposal.id }});">
                     </div>
 
                     <div class="form-group">
-                        <label for="comment1">Comments</label>
-                        <textarea class="form-control" id="comment1" name="comment1" rows="3" onchange="updateCommentsBadge(1);" onkeyup="updateCommentsBadge(1);"></textarea>
+                        <label for="comment{{ review.proposal.id }}">Comments</label>
+                        <textarea class="form-control" id="comment{{ review.proposal.id }}" name="comment{{ review.proposal.id }}" rows="3" onchange="updateCommentsBadge({{ review.proposal.id }});" onkeyup="updateCommentsBadge({{ review.proposal.id }});"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label for="ref_knowledge1">Your Expertise</label>
-                        <select class="form-control" id="ref_knowledge1" name="ref_knowledge1" onchange="updateExpertiseBadge(1);">
+                        <label for="ref_knowledge{{ review.proposal.id }}">Your Expertise</label>
+                        <select class="form-control" id="ref_knowledge{{ review.proposal.id }}" name="ref_knowledge{{ review.proposal.id }}" onchange="updateExpertiseBadge({{ review.proposal.id }});">
                             <option value="">Please choose one</option>
                             <option value="1">(1) This is my field of expertise.</option>
                             <option value="2">(2) I have some general knowledge of this field.</option>
@@ -130,7 +130,7 @@ function updateExpertiseBadge(proposalID) {
                         </select>
                     </div>
                     </div> {# /.card-body #}
-                </div> {# /#collapse1 #}
+                </div> {# /#collapse #}
             </div>
 
             {% endfor %}
