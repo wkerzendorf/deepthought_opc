@@ -64,6 +64,14 @@ function updateExpertiseBadge(proposalID) {
         badge.html('✔ Expertise ('+currentExpertise+')');
     } 
 }
+
+$(document).ready(function () {
+    {% for review in reviews %}
+    updateScoreBadge({{ review.proposal.id }});
+    updateCommentsBadge({{ review.proposal.id }});
+    updateExpertiseBadge({{ review.proposal.id }});
+    {% endfor %}
+});
 </script>
 </head>
 <body>
