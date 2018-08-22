@@ -44,8 +44,9 @@ class DTOPC(object):
               <input type="text" value="8" name="ref_id" />
               <button type="submit">Give it now!</button>
             </form>
+            {0}
           </body>
-        </html>"""
+        </html>""".format(str(self.db.query(Referee.uuid).all()))
 
     @cherrypy.expose
     def display(self, ref_id):
