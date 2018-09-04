@@ -8,13 +8,6 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-def get_data_review(prop_id, referee_id):
-    return {'comment':'test', 'ranking':4, 'similarity':3}
-
-def get_reviewer_per_proposal(ref_id):
-    return ['sdfsdf', 'sdfsd', 'sdfsdf', 'sdfsdf']
-
-
 
 class Referee(Base):
     __tablename__ = 'referees'
