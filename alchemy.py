@@ -41,6 +41,12 @@ class Proposal(Base):
 class Review(Base):
     __tablename__ = 'reviews'
 
+    MIN_COMMENT = 20
+    MIN_REF_KNOWLEDGE = 1
+    MAX_REF_KNOWLEDGE = 3
+    MIN_SCORE = 1.0
+    MAX_SCORE = 5.0
+
     id = Column(Integer, primary_key=True)
     referee_id = Column(Integer, ForeignKey('referees.id'))
     proposal_id = Column(Integer, ForeignKey('proposals.id'))
@@ -48,9 +54,21 @@ class Review(Base):
     ref_knowledge = Column(Integer)
     score = Column(Float)
     last_updated = Column(DateTime, onupdate=datetime.datetime.now)
+    # todo: close_relationship = Column(Boolean, default=False)
+    # todo: direct_competitor = Column(Boolean, default=False)
 
     proposal = relationship('Proposal')
     referee = relationship('Referee')
+
+    # comment must be > 20 chars
+    # ref_knowledge must be non-null and 1-3
+    # score must be non-null and 1.0 (outstanding) - 5.0 (rejected)
+    # todo: True for either conflict (close_relationship, direct_competitor) eliminates these requirements
+    def is_valid(self):
+        comment_valid = isinstance(self.comment, str) and len(self.comment) >= self.MIN_COMMENT
+        ref_knowledge_valid = isinstance(self.ref_knowledge, int) and self.ref_knowledge >= self.MIN_REF_KNOWLEDGE and self.ref_knowledge <= self.MAX_REF_KNOWLEDGE
+        score_valid = isinstance(self.score, float) and self.score >= self.MIN_SCORE and self.score <= self.MAX_SCORE
+        return comment_valid and ref_knowledge_valid and score_valid
 
 
 
