@@ -57,6 +57,24 @@ class DTOPC(object):
         template = env.get_template('review_all')
 
         return template.render(reviews=reviews)
+    
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def save_review(self, review_json):
+        # todo: get Authorization header (how in cherrypy?) and check against DB first (else return 401 Unauthorized)
+        # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
+        review = Review()
+        review.proposal_id = review_json.proposal_id
+        review.comment = review_json.comment
+        review.ref_knowledge = review_json.ref_knowledge
+        review.score = review_json.score
+        # todo: make sure that review is valid (else return 422 Unprocessable entity)
+        # try: 
+        #     review.save() ??? 
+        #     fetch saved review, turn it back into JSON (need Review.to_json() ?)
+        #     return 200 OK, with fetched_review.to_json() as body
+        # catch:
+        #     return 500 Internal Error
 
 
 

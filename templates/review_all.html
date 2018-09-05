@@ -57,24 +57,96 @@ function updateExpertiseBadge(proposalID) {
     if (currentExpertise == '') {
         badge.addClass('badge-secondary');
         badge.removeClass('badge-success');
-        badge.html('✘ No comments');
+        badge.html('✘ Expertise missing');
     } else {
         badge.removeClass('badge-secondary');
         badge.addClass('badge-success');
         badge.html('✔ Expertise ('+currentExpertise+')');
     } 
 }
+
+function updateSavedBadge(proposalID, lastUpdated) {
+    badge = $('#badgeSaved'+proposalID);
+    if (lastUpdated == undefined) {
+        lastUpdated = $('#last_updated'+proposalID).val();
+    }
+    badge.removeClass('badge-secondary');
+    badge.addClass('badge-success');
+    badge.html('✔ Saved ('+lastUpdated+')');
+}
+
+// collapse accordion; "save" button -> "update" in case user wants more changes
+function collapseAndChangeSaveButton(proposalID) {
+    $('.collapse').collapse('hide');
+    $('#saveButton'+proposalID).removeClass('btn-success');
+    $('#saveButton'+proposalID).addClass('btn-primary');
+    $('#saveButton'+proposalID).html('Update');
+    $('#saveButton'+proposalID).attr('onclick', "submitReview("+proposalID+");");
+}
+
+function submitReview(proposalID) {
+    review = {"proposal_id": proposalID};
+    // need to put id and/or referee_id
+    review.comment = $('#comment'+proposalID).val();
+    review.ref_knowledge = $('#ref_knowledge'+proposalID).val();
+    review.score = $('#score'+proposalID).val();
+
+    console.log(review);
+    
+    /* need cherrypy running for below:
+    $.ajax({
+        url: '/save_review',
+        type: 'PUT',
+        beforeSend: function (xhr) { */
+            $('#submitGif'+proposalID).css('display', 'inherit'); /*
+        //     xhr.setRequestHeader('Authorization', 'Basic {{ token }}');
+        },
+        dataType: 'json',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify(review),
+        success: function(response) { */
+            updateSavedBadge(proposalID, '2018-09-05 13:00'); // review.last_updated
+    
+            $('#saveButton'+proposalID).addClass('btn-success');
+            $('#saveButton'+proposalID).removeClass('btn-primary');
+            $('#saveButton'+proposalID).html('✔ Saved (Click to Close)');
+            $('#saveButton'+proposalID).attr('onclick', "collapseAndChangeSaveButton("+proposalID+");");
+            $('#submitGif'+proposalID).css('display', 'none'); /*
+        },
+        error: function(response) {
+            // mark review error
+            console.log(response.status+": "+response.responseText);
+        },
+        complete: function() {
+            // hide animation
+        }
+    });
+    */
+}
+
+$(document).ready(function () {
+    //{% for review in reviews %}
+    updateScoreBadge(777);
+    updateCommentsBadge(777);
+    updateExpertiseBadge(777);
+    
+    //{% endfor %}
+});
 </script>
+
+
 </head>
+
+
 <body>
 <div class="container">
     <div class="row">
         <h1>Deepthought OPC</h1>
     </div>
     <div class="row">
-        <div class="col-8 offset-md-2">
+        <div class="col-10 offset-md-1">
             <div>
-                <!-- alerts will go here -->
+                <!-- {# alerts will go here #} -->
             </div>
 
             <h2>Proposals for you to referee:</h2>
@@ -83,59 +155,71 @@ function updateExpertiseBadge(proposalID) {
             
             <div class="accordion" id="proposalsAccordion">
             
-            <!-- foreach proposal -->
+            <!-- {% for review in reviews %} -->
 
             <div class="card">
-                <div class="card-header" id="heading1">
+                <div class="card-header" id="heading777">
                     <div class="row">
                     <div class="col-12">
                     <h5 class="mb-0" style="display: inline-block;">
-                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
-                        #1: Title Goes Here#1: Title Goes Here#1: Title Goes Here#1: Title Goes Here#1: Title Goes Here#1: Title Goes Here#1: Title Goes Here#1: Title Goes Here
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse777" aria-expanded="true" aria-controls="collapse777">
+                        1234567: A Modest Proposal
                     </button>
                     </h5>
                     </div>
 
                     <div class="col-12 text-right" style="padding-top: .5em;">
-                    <span class="badge badge-secondary" id="badgeScore1">✘ No score</span>
-                    <span class="badge badge-secondary" id="badgeComments1">✘ No comments</span>
-                    <span class="badge badge-secondary" id="badgeExpertise1">✘ No expertise</span>
+                    <span class="badge badge-secondary" id="badgeScore777">✘ No score</span>
+                    <span class="badge badge-secondary" id="badgeComments777">✘ No comments</span>
+                    <span class="badge badge-secondary" id="badgeExpertise777">✘ No expertise</span>
+                    &nbsp;&nbsp;&nbsp;
+                    <span class="badge badge-secondary" id="badgeSaved777">✘ Review not saved</span>
                     </div>
                     </div>
                 </div>
             
-                <div id="collapse1" class="collapse" aria-labelledby="heading1" data-parent="#proposalsAccordion">
+                <div id="collapse777" class="collapse" aria-labelledby="heading777" data-parent="#proposalsAccordion">
                     <div class="card-body">
-                    <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec consequat turpis ante, quis fringilla leo consectetur nec. Vestibulum tristique ornare dolor gravida luctus. Donec elementum faucibus diam, vel sagittis ipsum mattis ac. In consectetur, quam eu tempor aliquam, lectus quam volutpat enim, ut iaculis urna quam non ante. Vivamus tempor sem sed augue fringilla, quis consectetur lectus egestas. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Ut sagittis euismod nisi in porttitor. Donec dapibus urna pharetra odio rutrum, at tristique nisi scelerisque. Morbi lacinia metus eget felis vulputate venenatis. Nullam non lorem leo. Nunc nec sem eget eros accumsan tincidunt id sed mi. Fusce molestie, leo eget accumsan pulvinar, est ante porttitor mauris, id accumsan justo nisl sed nisi.</p>
 
                     <p><a href="#">View Proposal PDF</a></p>
 
                     <div class="form-group">
-                        <label for="score1">Proposal Score</label>
-                        <input type="number" class="form-control" id="score1" name="score1" placeholder="0.0 - 5.0" step="0.1" min="0" max="5" onchange="updateScoreBadge(1);" onkeyup="updateScoreBadge(1);">
+                        <label for="score777">Proposal Score</label>
+                        <input type="number" class="form-control" id="score777" name="score777" placeholder="0.0 - 5.0" step="0.1" min="0" max="5" onchange="updateScoreBadge(777);" onkeyup="updateScoreBadge(777);">
                     </div>
 
                     <div class="form-group">
-                        <label for="comment1">Comments</label>
-                        <textarea class="form-control" id="comment1" name="comment1" rows="3" onchange="updateCommentsBadge(1);" onkeyup="updateCommentsBadge(1);"></textarea>
+                        <label for="comment777">Comments</label>
+                        <textarea class="form-control" id="comment777" name="comment777" rows="3" onchange="updateCommentsBadge(777);" onkeyup="updateCommentsBadge(777);"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label for="ref_knowledge1">Your Expertise</label>
-                        <select class="form-control" id="ref_knowledge1" name="ref_knowledge1" onchange="updateExpertiseBadge(1);">
+                        <label for="ref_knowledge777">Your Expertise</label>
+                        <select class="form-control" id="ref_knowledge777" name="ref_knowledge777" onchange="updateExpertiseBadge(777);">
                             <option value="">Please choose one</option>
                             <option value="1">(1) This is my field of expertise.</option>
                             <option value="2">(2) I have some general knowledge of this field.</option>
                             <option value="3">(3) I have little or no knowledge of this field.</option>
                         </select>
                     </div>
-                    </div> <!-- /.card-body -->
-                </div> <!-- /#collapse1 -->
+                    
+                    <input type="hidden" id="last_updated777" name="last_updated777" value="2018-09-05 12:37">
+
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-primary" id="saveButton777" onclick="submitReview(777);">
+                            <img src="../img/ajax-loader.gif" id="submitGif777" class="submitGif" style="display: none;">
+                            &nbsp;Save this Review
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="$('.collapse').collapse('hide');">Close without Submitting</button>
+                    </div>
+                    </div> <!-- {# /.card-body #} -->
+                </div> <!-- {# /#collapse #} -->
             </div>
 
-            <!-- end foreach -->
+            <!-- {% endfor %} -->
 
-            </div> <!-- /proposalsAccordion-->
+            </div> <!-- {# /proposalsAccordion #}-->
             </form>
 
         </div>
