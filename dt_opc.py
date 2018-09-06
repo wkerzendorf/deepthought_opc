@@ -68,6 +68,8 @@ class DTOPC(object):
         review.comment = review_json.comment
         review.ref_knowledge = review_json.ref_knowledge
         review.score = review_json.score
+        # review.close_relationship = review_json.close_relationship
+        # review.direct_competitor = review_json.direct_competitor
         # todo: make sure that review is valid (else return 422 Unprocessable entity)
         # try: 
         #     review.save() ??? 

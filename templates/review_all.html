@@ -9,70 +9,91 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 <script>
+function conflictExists(proposalID) {
+    return $('#close_relationship'+proposalID).prop('checked') || $('#direct_competitor'+proposalID).prop('checked');
+}
+
+function grayBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-secondary');
+    badge.removeClass('badge-success');
+    badge.removeClass('badge-danger');
+    // if any more bootstrap badge types are used, add them here
+    badge.html(htmlContent);
+}
+
+function greenBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-success');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-danger');
+    // if any more bootstrap badge types are used, add them here
+    badge.html(htmlContent);
+}
+
+function redBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-danger');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-success');
+    // if any more bootstrap badge types are used, add them here
+    badge.html(htmlContent);
+}
+
 function updateScoreBadge(proposalID) {
     currentScore = $('#score'+proposalID).val();
     badge = $('#badgeScore'+proposalID);
     if (currentScore == '') {
-        badge.addClass('badge-secondary');
-        badge.removeClass('badge-success');
-        badge.removeClass('badge-danger');
-        badge.html('✘ No score');
-    } else if (currentScore >= 0.0 && currentScore <= 5.0) {
-        badge.removeClass('badge-secondary');
-        badge.addClass('badge-success');
-        badge.removeClass('badge-danger');
-        badge.html('✔ Score: '+currentScore);
+        grayBadge('badgeScore'+proposalID, '✘ No score');
+    } else if (currentScore >= 1.0 && currentScore <= 5.0) {
+        greenBadge('badgeScore'+proposalID, '✔ Score: '+currentScore);
     } else {
-        badge.removeClass('badge-secondary');
-        badge.removeClass('badge-success');
-        badge.addClass('badge-danger');
-        badge.html('✘ Invalid Score: '+currentScore);
+        redBadge('badgeScore'+proposalID, '✘ Invalid Score: '+currentScore);
     }
 }
 
 function updateCommentsBadge(proposalID) {
     currentComments = $('#comment'+proposalID).val();
-    badge = $('#badgeComments'+proposalID);
+    badgeID = 'badgeComments'+proposalID;
     if (currentComments.trim() == '') {
-        badge.addClass('badge-secondary');
-        badge.removeClass('badge-success');
-        badge.removeClass('badge-danger');
-        badge.html('✘ No comments');
+        grayBadge(badgeID, '✘ No comments');
     } else if (currentComments.length > 10) {
-        badge.removeClass('badge-secondary');
-        badge.addClass('badge-success');
-        badge.removeClass('badge-danger');
-        badge.html('✔ Comments ('+currentComments.length+' chars)');
+        greenBadge(badgeID, '✔ Comments ('+currentComments.length+' chars)');
     } else {
-        badge.removeClass('badge-secondary');
-        badge.removeClass('badge-success');
-        badge.addClass('badge-danger');
-        badge.html('✘ Comments('+currentComments.length+' chars)');
+        redBadge(badgeID, '✘ Comments('+currentComments.length+' chars)');
     }
 }
 
 function updateExpertiseBadge(proposalID) {
     currentExpertise = $('#ref_knowledge'+proposalID).val();
-    badge = $('#badgeExpertise'+proposalID);
+    badgeID = 'badgeExpertise'+proposalID;
     if (currentExpertise == '') {
-        badge.addClass('badge-secondary');
-        badge.removeClass('badge-success');
-        badge.html('✘ Expertise missing');
+        grayBadge(badgeID, '✘ Expertise missing');
     } else {
-        badge.removeClass('badge-secondary');
-        badge.addClass('badge-success');
-        badge.html('✔ Expertise ('+currentExpertise+')');
+        greenBadge(badgeID, '✔ Expertise: '+currentExpertise);
     } 
 }
 
 function updateSavedBadge(proposalID, lastUpdated) {
-    badge = $('#badgeSaved'+proposalID);
     if (lastUpdated == undefined) {
         lastUpdated = $('#last_updated'+proposalID).val();
     }
-    badge.removeClass('badge-secondary');
-    badge.addClass('badge-success');
-    badge.html('✔ Saved ('+lastUpdated+')');
+    greenBadge('badgeSaved'+proposalID, '✔ Saved ('+lastUpdated+')');
+}
+
+
+
+// when either conflict is checked, the other inputs for that review should be disabled:
+function toggleConflictOverride(proposalID) {
+    if (conflictExists(proposalID)) {
+        $('.badgeReview'+proposalID).css('display', 'none');
+        $('#badgeConflict'+proposalID).css('display', 'inline-block');
+        $('.reviewInput'+proposalID).attr('disabled', true);
+    } else {
+        $('.badgeReview'+proposalID).css('display', 'inline-block');
+        $('#badgeConflict'+proposalID).css('display', 'none');
+        $('.reviewInput'+proposalID).attr('disabled', false);
+    }
 }
 
 // collapse accordion; "save" button -> "update" in case user wants more changes
@@ -90,6 +111,8 @@ function submitReview(proposalID) {
     review.comment = $('#comment'+proposalID).val();
     review.ref_knowledge = $('#ref_knowledge'+proposalID).val();
     review.score = $('#score'+proposalID).val();
+    review.close_relationship = $('#close_relationship'+proposalID).prop('checked');
+    review.direct_competitor = $('#direct_competitor'+proposalID).prop('checked');
 
     console.log(review);
     
@@ -129,6 +152,7 @@ $(document).ready(function () {
     updateScoreBadge(777);
     updateCommentsBadge(777);
     updateExpertiseBadge(777);
+    toggleConflictOverride(777);
     
     //{% endfor %}
 });
@@ -169,9 +193,10 @@ $(document).ready(function () {
                     </div>
 
                     <div class="col-12 text-right" style="padding-top: .5em;">
-                    <span class="badge badge-secondary" id="badgeScore777">✘ No score</span>
-                    <span class="badge badge-secondary" id="badgeComments777">✘ No comments</span>
-                    <span class="badge badge-secondary" id="badgeExpertise777">✘ No expertise</span>
+                    <span class="badge badge-info" id="badgeConflict777">Conflict exists</span>
+                    <span class="badge badge-secondary badgeReview777" id="badgeScore777">✘ No score</span>
+                    <span class="badge badge-secondary badgeReview777" id="badgeComments777">✘ No comments</span>
+                    <span class="badge badge-secondary badgeReview777" id="badgeExpertise777">✘ No expertise</span>
                     &nbsp;&nbsp;&nbsp;
                     <span class="badge badge-secondary" id="badgeSaved777">✘ Review not saved</span>
                     </div>
@@ -186,27 +211,41 @@ $(document).ready(function () {
 
                     <div class="form-group">
                         <label for="score777">Proposal Score</label>
-                        <input type="number" class="form-control" id="score777" name="score777" placeholder="0.0 - 5.0" step="0.1" min="0" max="5" onchange="updateScoreBadge(777);" onkeyup="updateScoreBadge(777);">
+                        <input type="number" class="form-control reviewInput777" id="score777" name="score777" placeholder="1.0 - 5.0" step="0.1" min="1" max="5" onchange="updateScoreBadge(777);" onkeyup="updateScoreBadge(777);">
                     </div>
 
                     <div class="form-group">
                         <label for="comment777">Comments</label>
-                        <textarea class="form-control" id="comment777" name="comment777" rows="3" onchange="updateCommentsBadge(777);" onkeyup="updateCommentsBadge(777);"></textarea>
+                        <textarea class="form-control reviewInput777" id="comment777" name="comment777" rows="3" onchange="updateCommentsBadge(777);" onkeyup="updateCommentsBadge(777);"></textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="ref_knowledge777">Your Expertise</label>
-                        <select class="form-control" id="ref_knowledge777" name="ref_knowledge777" onchange="updateExpertiseBadge(777);">
+                        <select class="form-control reviewInput777" id="ref_knowledge777" name="ref_knowledge777" onchange="updateExpertiseBadge(777);">
                             <option value="">Please choose one</option>
                             <option value="1">(1) This is my field of expertise.</option>
                             <option value="2">(2) I have some general knowledge of this field.</option>
                             <option value="3">(3) I have little or no knowledge of this field.</option>
                         </select>
                     </div>
+
+                    <hr style="margin-top: 2em; margin-bottom: 2em;">
+
+                    <h5 class="text-center">Or: I cannot review this proposal, because I have a conflict:</h5>
+                    <div class="row">
+                    <div class="col-8 offset-md-2">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="close_relationship777" onchange="toggleConflictOverride(777);"><label for="close_relationship777" class="form-check-label"> I have a close personal or professional relationship with the PI.</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="direct_competitor777" onchange="toggleConflictOverride(777);"><label for="direct_competitor777" class="form-check-label"> I am a direct competitor to this proposal.</label>
+                    </div>
+                    </div>
+                    </div>
                     
                     <input type="hidden" id="last_updated777" name="last_updated777" value="2018-09-05 12:37">
 
-                    <div class="form-group text-center">
+                    <div class="form-group text-center" style="margin-top: 2em;">
                         <button type="button" class="btn btn-primary" id="saveButton777" onclick="submitReview(777);">
                             <img src="../img/ajax-loader.gif" id="submitGif777" class="submitGif" style="display: none;">
                             &nbsp;Save this Review
