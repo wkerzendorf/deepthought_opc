@@ -89,7 +89,7 @@ function updateSavedBadge(reviewID, lastUpdated, isComplete) {
         lastUpdated = $('#last_updated'+reviewID).val();
     }
     if (isComplete == undefined) {
-        isComplete = $('#is_complete'+reviewID).val() == 'True';
+        isComplete = ["true", "True", true].includes($('#is_complete'+reviewID).val());
     }
     if (lastUpdated == '') {
         grayBadge(badgeID, '✘ Review not saved');
@@ -99,8 +99,6 @@ function updateSavedBadge(reviewID, lastUpdated, isComplete) {
         greenBadge(badgeID, '✔ Saved ('+lastUpdated+')');
     }
 }
-
-
 
 // when either conflict is checked, the other inputs for that review should be disabled:
 function toggleConflictOverride(reviewID) {
@@ -148,8 +146,9 @@ function submitReview(reviewID) {
         dataType: 'json',
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify(review),
-        success: function(response) { 
-            updateSavedBadge(reviewID, '2018-09-05 13:00'); // review.last_updated
+        success: function(response) {
+            refillSubmittedReview(response) ;
+            updateSavedBadge(reviewID);
     
             $('#saveButton'+reviewID).addClass('btn-success');
             $('#saveButton'+reviewID).removeClass('btn-primary');
@@ -157,7 +156,7 @@ function submitReview(reviewID) {
             $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
             $('#submitGif'+reviewID).css('display', 'none'); 
 
-            console.log('received: '+response.responseText);
+            console.log('received: '+JSON.stringify(response));
         },
         error: function(response) {
             // mark review error
@@ -167,6 +166,18 @@ function submitReview(reviewID) {
             // hide animation
         }
     });
+}
+
+function refillSubmittedReview(json) {
+    review = json.review
+    reviewID = review.id
+    $('#comment'+reviewID).val(review.comment);
+    // $('#ref_knowledge'+reviewID).val(); need to find appropriate element and apply selected?
+    $('#score'+reviewID).val(review.score);
+    //review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
+    //review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
+    $('#last_updated'+reviewID).val(review.last_updated);
+    $('#is_complete'+reviewID).val(json.is_complete);
 }
 
 $(document).ready(function () {

@@ -60,11 +60,15 @@ class DTOPC(object):
         template = env.get_template('review_all.html.j2')
 
         return template.render(reviews=reviews)
+
+
+@cherrypy.expose
+class ReviewSaverService(object):
     
-    @cherrypy.expose
+    @cherrypy.tools.accept(media="application/json")
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def save_review(self):
+    def PUT(self):
         review_json = cherrypy.request.json
         # todo: get Authorization header (how in cherrypy?) and check against DB first (else return 401 Unauthorized)
         # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
@@ -76,10 +80,10 @@ class DTOPC(object):
         #     return 200 OK, with fetched_review.to_json() as body
         # catch:
         #     return 500 Internal Error
-        response = {'review': review.to_json(), 'is_complete': review.is_complete()}
+        saved_json = review.to_json()
+        saved_json['last_updated'] = '2020-01-10 14:00:00'
+        response = {'review': saved_json, 'is_complete': review.is_complete()}
         return response
-
-
 
 
 if __name__ == '__main__':
@@ -89,6 +93,11 @@ if __name__ == '__main__':
             'server.socket_host' : '0.0.0.0',
             'server.socket_port' : 8081,
             'server.thread_pool' : 8
+        },
+        '/save_review': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.response_headers.on': True,
+            'tools.response_headers.headers': [('Content-Type', 'application/json')]
         },
         '/css' : {
             'tools.staticdir.on'  : True,
@@ -106,4 +115,6 @@ if __name__ == '__main__':
     sqlalchemy_plugin = SQLAlchemyPlugin(cherrypy.engine, Base, 'sqlite:///dt_opc_test.db')
     sqlalchemy_plugin.subscribe()
     sqlalchemy_plugin.create()
-    cherrypy.quickstart(DTOPC(), '/', conf)
+    webapp = DTOPC()
+    webapp.save_review = ReviewSaverService()
+    cherrypy.quickstart(webapp, '/', conf)
