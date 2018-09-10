@@ -18,7 +18,7 @@ function grayBadge(badgeID, htmlContent) {
     badge.addClass('badge-secondary');
     badge.removeClass('badge-success');
     badge.removeClass('badge-danger');
-    // if any more bootstrap badge types are used, add them here
+    badge.removeClass('badge-warning');
     badge.html(htmlContent);
 }
 
@@ -27,7 +27,7 @@ function greenBadge(badgeID, htmlContent) {
     badge.addClass('badge-success');
     badge.removeClass('badge-secondary');
     badge.removeClass('badge-danger');
-    // if any more bootstrap badge types are used, add them here
+    badge.removeClass('badge-warning');
     badge.html(htmlContent);
 }
 
@@ -36,7 +36,16 @@ function redBadge(badgeID, htmlContent) {
     badge.addClass('badge-danger');
     badge.removeClass('badge-secondary');
     badge.removeClass('badge-success');
-    // if any more bootstrap badge types are used, add them here
+    badge.removeClass('badge-warning');
+    badge.html(htmlContent);
+}
+
+function yellowBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-warning');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-success');
+    badge.removeClass('badge-danger');
     badge.html(htmlContent);
 }
 
@@ -74,14 +83,20 @@ function updateExpertiseBadge(reviewID) {
     } 
 }
 
-function updateSavedBadge(reviewID, lastUpdated) {
+function updateSavedBadge(reviewID, lastUpdated, isComplete) {
+    badgeID = 'badgeSaved'+reviewID;
     if (lastUpdated == undefined) {
         lastUpdated = $('#last_updated'+reviewID).val();
     }
+    if (isComplete == undefined) {
+        isComplete = $('#is_complete'+reviewID).val() == 'True';
+    }
     if (lastUpdated == '') {
-        grayBadge('badgeSaved'+reviewID, '✘ Review not saved');
+        grayBadge(badgeID, '✘ Review not saved');
+    } else if (!isComplete) {
+        yellowBadge(badgeID, '✔ Saved ('+lastUpdated+')');
     } else {
-        greenBadge('badgeSaved'+reviewID, '✔ Saved ('+lastUpdated+')');
+        greenBadge(badgeID, '✔ Saved ('+lastUpdated+')');
     }
 }
 
@@ -248,6 +263,7 @@ $(document).ready(function () {
                     </div>
                     
                     <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
+                    <input type="hidden" id="is_complete{{ review.id }}" name="is_comlete{{ review.id }}" value="{{ review|is_complete }}">
 
                     <div class="form-group text-center" style="margin-top: 2em;">
                         <button type="button" class="btn btn-primary" id="saveButton{{ review.id }}" onclick="submitReview({{ review.id }});">

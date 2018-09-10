@@ -60,15 +60,25 @@ class Review(Base):
     proposal = relationship('Proposal')
     referee = relationship('Referee')
 
-    # comment must be > 20 chars
-    # ref_knowledge must be non-null and 1-3
-    # score must be non-null and 1.0 (outstanding) - 5.0 (rejected)
+    # comment must be a string
+    # ref_knowledge must be 1-3
+    # score must be 1.0 (outstanding) - 5.0 (rejected)
+    # blank fields are OK
     # todo: True for either conflict (close_relationship, direct_competitor) eliminates these requirements
     def is_valid(self):
-        comment_valid = isinstance(self.comment, str) and len(self.comment) >= self.MIN_COMMENT
-        ref_knowledge_valid = isinstance(self.ref_knowledge, int) and self.ref_knowledge >= self.MIN_REF_KNOWLEDGE and self.ref_knowledge <= self.MAX_REF_KNOWLEDGE
-        score_valid = isinstance(self.score, float) and self.score >= self.MIN_SCORE and self.score <= self.MAX_SCORE
+        comment_valid = self.comment == None or isinstance(self.comment, str)
+        ref_knowledge_valid = self.ref_knowledge == None or (isinstance(self.ref_knowledge, int) and self.ref_knowledge >= self.MIN_REF_KNOWLEDGE and self.ref_knowledge <= self.MAX_REF_KNOWLEDGE)
+        score_valid = self.score == None or (isinstance(self.score, float) and self.score >= self.MIN_SCORE and self.score <= self.MAX_SCORE)
         return comment_valid and ref_knowledge_valid and score_valid
+    
+    # todo: True for either conflict (close_relationship, direct_competitor) eliminates these requirements
+    def is_complete(self):
+        comment_filled = isinstance(self.comment, str) and len(self.comment) >= self.MIN_COMMENT
+        ref_knowledge_filled = self.ref_knowledge != None
+        score_filled = self.score != None
+        # todo: conflicts
+        return self.is_valid() and comment_filled and ref_knowledge_filled and score_filled
+        
 
 
 

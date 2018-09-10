@@ -15,12 +15,13 @@ class ReviewTest(unittest.TestCase):
         good_review.score = 1.7
         self.assertTrue(good_review.is_valid())
 
+    	# a blank review is valid, but incomplete:
         blank = Review()
-        self.assertFalse(blank.is_valid())
+        self.assertTrue(blank.is_valid())
 
         short = copy.copy(good_review)
         short.comment = "Lorem ipsum dolor s" # 19
-        self.assertFalse(short.is_valid())
+        self.assertTrue(short.is_valid())
 
         too_dumb = copy.copy(good_review)
         too_dumb.ref_knowledge = 88
@@ -39,6 +40,30 @@ class ReviewTest(unittest.TestCase):
         self.assertFalse(too_mean.is_valid())
 
         # todo: a True for either of the conflicts is_valid() regardless of other properties
+    
+
+    def test_is_complete(self):
+        good_review = Review()
+        good_review.comment = "Lorem ipsum dolor sit amet."
+        good_review.ref_knowledge = 2
+        good_review.score = 1.7
+        self.assertTrue(good_review.is_complete())
+
+        # blank review is valid, but incomplete:
+        blank = Review()
+        self.assertFalse(blank.is_complete())
+
+        short = copy.copy(good_review)
+        short.comment = "Lorem ipsum dolor s" # 19
+        self.assertFalse(short.is_complete())
+
+        missing_score = copy.copy(good_review)
+        missing_score.score = None
+        self.assertFalse(missing_score.is_complete())
+
+        missing_ref_knowledge = copy.copy(good_review)
+        missing_ref_knowledge.ref_knowledge = None
+        self.assertFalse(missing_ref_knowledge.is_complete())
 
 
 if __name__ == '__main__':

@@ -10,6 +10,9 @@ from jinja2 import Environment, FileSystemLoader
 
 path = os.path.abspath(os.path.dirname(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(path, 'templates')))
+def review_is_complete(review): # defined here to make the method accessible in jinja
+    return review.is_complete()
+env.filters['is_complete'] = review_is_complete
 
 class DTOPC(object):
     _cp_config = {'tools.sessions.on': True, 
@@ -77,6 +80,7 @@ class DTOPC(object):
         #     return 200 OK, with fetched_review.to_json() as body
         # catch:
         #     return 500 Internal Error
+
 
 
 
