@@ -54,7 +54,7 @@ class DTOPC(object):
     def display(self, ref_id):
         cherrypy.session['ref_id'] = ref_id
         reviews = self.db.query(Referee).filter_by(uuid=ref_id).one().reviews
-        template = env.get_template('review_all')
+        template = env.get_template('review_all.html.j2')
 
         return template.render(reviews=reviews)
     
