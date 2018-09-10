@@ -64,6 +64,54 @@ class ReviewTest(unittest.TestCase):
         missing_ref_knowledge = copy.copy(good_review)
         missing_ref_knowledge.ref_knowledge = None
         self.assertFalse(missing_ref_knowledge.is_complete())
+    
+    def test_from_json(self):
+        # assume JSON has quoted values, which need to be cast:
+        json = {'id': '13', 'referee_id': '44', 'proposal_id': '537', 'comment': 'PI is clearly an astrologer', 'ref_knowledge': '1', 'score': '5.0', 'last_updated': '2018-09-01 15:00:00.000'}
+        received = Review.from_json(json)
+        
+        self.assertEqual(13, received.id)
+        self.assertEqual(44, received.referee_id)
+        self.assertEqual(537, received.proposal_id)
+        self.assertEqual('PI is clearly an astrologer', received.comment)
+        self.assertEqual(1, received.ref_knowledge)
+        self.assertEqual(5.0, received.score)
+        self.assertEqual('2018-09-01 15:00:00.000', received.last_updated)
+        self.assertTrue(received.is_complete())
+
+        # incomplete review should have None fields where appropriate: 
+        json = {'id': 13, 'referee_id': 44, 'proposal_id': 537, 'comment': '', 'ref_knowledge': 1, 'score': '', 'last_updated': '2018-09-01 15:00:00.000'}
+        received = Review.from_json(json)
+        self.assertEqual(13, received.id)
+        self.assertEqual(44, received.referee_id)
+        self.assertEqual(537, received.proposal_id)
+        self.assertEqual(None, received.comment)
+        self.assertEqual(1, received.ref_knowledge)
+        self.assertEqual(None, received.score)
+        self.assertEqual('2018-09-01 15:00:00.000', received.last_updated)
+        self.assertFalse(received.is_complete())
+
+        # JSON missing a field, e.g. referee_id:
+        json = {'id': 13, 'proposal_id': 537, 'comment': '', 'ref_knowledge': 1, 'score': '', 'last_updated': '2018-09-01 15:00:00.000'}
+        with self.assertRaises(ValueError):
+            Review.from_json(json)
+    
+    def test_to_json(self):
+        review = Review()
+        review.id = 7
+        review.referee_id = 55
+        review.proposal_id = 99
+        review.comment = "Lorem ipsum dolor sit amet."
+        review.ref_knowledge = 2
+        review.score = 1.7
+        review.last_updated = '2018-09-01 12:00:00.000'
+
+        expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'comment': 'Lorem ipsum dolor sit amet.', 'ref_knowledge': 2, 'score': 1.7, 'last_updated': '2018-09-01 12:00:00.000'}
+        self.assertEqual(expected, review.to_json())
+
+
+
+
 
 
 if __name__ == '__main__':

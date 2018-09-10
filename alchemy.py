@@ -60,6 +60,35 @@ class Review(Base):
     proposal = relationship('Proposal')
     referee = relationship('Referee')
 
+    @staticmethod
+    def from_json(json):
+        review = Review()
+        # todo: add conflicts to list
+        properties = ['id', 'referee_id', 'proposal_id', 'comment', 'ref_knowledge', 'score', 'last_updated']
+        int_props = ['id', 'referee_id', 'proposal_id', 'ref_knowledge']
+        for prop in properties:
+            if prop not in json: 
+                raise ValueError('JSON missing one or more required properties.')
+            value = json[prop]
+            if prop in int_props:
+                value = None if value == '' else int(value)
+            elif prop == 'score':
+                value = None if value == '' else float(value)
+            elif prop == 'comment': 
+                value = None if value == '' else value
+
+            setattr(review, prop, value)
+
+        return review
+    
+    def to_json(self):
+        json = {}
+        properties = ['id', 'referee_id', 'proposal_id', 'comment', 'ref_knowledge', 'score', 'last_updated']
+        for prop in properties: 
+            json[prop] = getattr(self, prop)
+        
+        return json
+
     # comment must be a string
     # ref_knowledge must be 1-3
     # score must be 1.0 (outstanding) - 5.0 (rejected)

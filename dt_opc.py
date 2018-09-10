@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from alchemy import Referee, Base, Proposal
+from alchemy import Referee, Base, Proposal, Review
 import cherrypy
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
@@ -62,17 +62,13 @@ class DTOPC(object):
         return template.render(reviews=reviews)
     
     @cherrypy.expose
+    @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def save_review(self, review_json):
+    def save_review(self):
+        review_json = cherrypy.request.json
         # todo: get Authorization header (how in cherrypy?) and check against DB first (else return 401 Unauthorized)
         # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
-        review = Review()
-        review.proposal_id = review_json.proposal_id
-        review.comment = review_json.comment
-        review.ref_knowledge = review_json.ref_knowledge
-        review.score = review_json.score
-        # review.close_relationship = review_json.close_relationship
-        # review.direct_competitor = review_json.direct_competitor
+        review = Review.from_json(review_json)
         # todo: make sure that review is valid (else return 422 Unprocessable entity)
         # try: 
         #     review.save() ??? 
@@ -80,6 +76,8 @@ class DTOPC(object):
         #     return 200 OK, with fetched_review.to_json() as body
         # catch:
         #     return 500 Internal Error
+        response = {'review': review.to_json(), 'is_complete': review.is_complete()}
+        return response
 
 
 

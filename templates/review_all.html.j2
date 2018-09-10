@@ -126,34 +126,38 @@ function collapseAndChangeSaveButton(reviewID) {
 
 function submitReview(reviewID) {
     review = {"id": reviewID};
-    // need to put proposal_id and/or referee_id
+    review.referee_id = $('#referee_id'+reviewID).val();
+    review.proposal_id = $('#proposal_id'+reviewID).val();
     review.comment = $('#comment'+reviewID).val();
     review.ref_knowledge = $('#ref_knowledge'+reviewID).val();
     review.score = $('#score'+reviewID).val();
     review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
     review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
+    review.last_updated = $('#last_updated'+reviewID).val();
 
-    console.log(review);
+    console.log('sending: '+JSON.stringify(review));
     
-    /* need cherrypy running for below:
+    
     $.ajax({
         url: '/save_review',
         type: 'PUT',
-        beforeSend: function (xhr) { */
-            $('#submitGif'+reviewID).css('display', 'inherit'); /*
+        beforeSend: function (xhr) { 
+            $('#submitGif'+reviewID).css('display', 'inherit'); 
         //     xhr.setRequestHeader('Authorization', 'Basic {{ token }}');
         },
         dataType: 'json',
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify(review),
-        success: function(response) { */
+        success: function(response) { 
             updateSavedBadge(reviewID, '2018-09-05 13:00'); // review.last_updated
     
             $('#saveButton'+reviewID).addClass('btn-success');
             $('#saveButton'+reviewID).removeClass('btn-primary');
             $('#saveButton'+reviewID).html('✔ Saved (Click to Close)');
             $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
-            $('#submitGif'+reviewID).css('display', 'none'); /*
+            $('#submitGif'+reviewID).css('display', 'none'); 
+
+            console.log('received: '+response.responseText);
         },
         error: function(response) {
             // mark review error
@@ -163,7 +167,6 @@ function submitReview(reviewID) {
             // hide animation
         }
     });
-    */
 }
 
 $(document).ready(function () {
@@ -262,6 +265,8 @@ $(document).ready(function () {
                     </div>
                     </div>
                     
+                    <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
+                    <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
                     <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
                     <input type="hidden" id="is_complete{{ review.id }}" name="is_comlete{{ review.id }}" value="{{ review|is_complete }}">
 
