@@ -68,6 +68,9 @@ class DTOPC(object):
 
 @cherrypy.expose
 class ReviewSaverService(object):
+    @property
+    def db(self):
+        return cherrypy.request.db
     
     @cherrypy.tools.accept(media="application/json")
     @cherrypy.tools.json_in()
@@ -78,7 +81,7 @@ class ReviewSaverService(object):
             response = {'Error': 'Missing user token.'}
             return response 
 
-        token = cherrypy.request.headers['Authorization'][6:]
+        token = cherrypy.request.headers['Authorization'][6:] # see https://en.wikipedia.org/wiki/Basic_access_authentication
         token = base64.b64decode(token).decode('ascii')
         expected_token = cherrypy.session['ref_id']+":"+cherrypy.session['ref_id']
         if expected_token != token:
@@ -86,11 +89,10 @@ class ReviewSaverService(object):
             response = {'Error': 'Submitted user token does not match session user.'}
             return response 
         
-        review_json = cherrypy.request.json
-        # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
+        submitted_review_json = cherrypy.request.json
         try:
-            review = Review.from_json(review_json)
-            if not review.is_valid():
+            submitted_review = Review.from_json(submitted_review_json)
+            if not submitted_review.is_valid():
                 raise ValueError('Review has one or more invalid values (e.g., score out of range).')
         except TypeError as e: # raised if JSON is missing an element
             cherrypy.response.status = 400
@@ -101,12 +103,23 @@ class ReviewSaverService(object):
             response = {'Error': e.args[0]}
             return response
 
+        fetched_review = self.db.query(Review).filter_by(id=submitted_review.id).one()
+        if fetched_review.referee_id != submitted_review.referee_id:
+            cherrypy.response.status = 401
+            response = {'Error': 'Review does not belong to this user.'}
+            return response 
+        if fetched_review.proposal_id != submitted_review.proposal_id:
+            cherrypy.response.status = 422
+            response = {'Error': 'Proposal IDs do not match. Please contact administrator.'}
+            return response 
+
         try: 
         #     review.save() ??? 
         #     review = Review.fetch(...) ?
-            saved_json = review.to_json()
+            # saved_json = submitted_review.to_json()
+            saved_json = fetched_review.to_json()
             saved_json['last_updated'] = '2020-01-10 14:00:00'
-            response = {'review': saved_json, 'is_complete': review.is_complete(), 'token': token}
+            response = {'review': saved_json, 'is_complete': submitted_review.is_complete(), 'token': token}
             return response
         except Exception as e:
             cherrypy.response.status = 500
