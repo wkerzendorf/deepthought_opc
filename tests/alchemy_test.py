@@ -93,7 +93,7 @@ class ReviewTest(unittest.TestCase):
 
         # JSON missing a field, e.g. referee_id:
         json = {'id': 13, 'proposal_id': 537, 'comment': '', 'ref_knowledge': 1, 'score': '', 'last_updated': '2018-09-01 15:00:00.000'}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             Review.from_json(json)
     
     def test_to_json(self):

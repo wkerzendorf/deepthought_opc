@@ -72,18 +72,31 @@ class ReviewSaverService(object):
         review_json = cherrypy.request.json
         # todo: get Authorization header (how in cherrypy?) and check against DB first (else return 401 Unauthorized)
         # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
-        review = Review.from_json(review_json)
-        # todo: make sure that review is valid (else return 422 Unprocessable entity)
-        # try: 
+        try:
+            review = Review.from_json(review_json)
+            if not review.is_valid():
+                raise ValueError('Review has one or more invalid values (e.g., score out of range).')
+        except TypeError as e: # raised if JSON is missing an element
+            cherrypy.response.status = 400
+            response = {'Error': e.args[0]}
+            return response
+        except ValueError as e:
+            cherrypy.response.status = 422
+            response = {'Error': e.args[0]}
+            return response
+
+        try: 
         #     review.save() ??? 
-        #     fetch saved review, turn it back into JSON (need Review.to_json() ?)
-        #     return 200 OK, with fetched_review.to_json() as body
-        # catch:
-        #     return 500 Internal Error
-        saved_json = review.to_json()
-        saved_json['last_updated'] = '2020-01-10 14:00:00'
-        response = {'review': saved_json, 'is_complete': review.is_complete()}
-        return response
+        #     review = Review.fetch(...) ?
+            saved_json = review.to_json()
+            saved_json['last_updated'] = '2020-01-10 14:00:00'
+            response = {'review': saved_json, 'is_complete': review.is_complete()}
+            return response
+        except Exception as e:
+            cherrypy.response.status = 500
+            response = {'Error': e.args[0]}
+            return response
+        
 
 
 if __name__ == '__main__':
@@ -102,6 +115,10 @@ if __name__ == '__main__':
         '/css' : {
             'tools.staticdir.on'  : True,
             'tools.staticdir.dir' : os.path.join(path, 'css')
+        },
+        '/img' : {
+            'tools.staticdir.on'  : True,
+            'tools.staticdir.dir' : os.path.join(path, 'img')
         },
         '/js' : {
             'tools.staticdir.on'  : True,

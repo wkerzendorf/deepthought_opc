@@ -116,6 +116,7 @@ function toggleConflictOverride(reviewID) {
 // collapse accordion; "save" button -> "update" in case user wants more changes
 function collapseAndChangeSaveButton(reviewID) {
     $('.collapse').collapse('hide');
+    $('#successAlert'+reviewID).slideUp();
     $('#saveButton'+reviewID).removeClass('btn-success');
     $('#saveButton'+reviewID).addClass('btn-primary');
     $('#saveButton'+reviewID).html('Update');
@@ -147,23 +148,28 @@ function submitReview(reviewID) {
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify(review),
         success: function(response) {
-            refillSubmittedReview(response) ;
+            refillSubmittedReview(response);
+            proposalID = response.review.proposal_id; // todo: use review.proposal.eso_id
             updateSavedBadge(reviewID);
     
+            $('#errorAlert'+reviewID).slideUp();
+            $('#successAlert'+reviewID).html('Review for '+proposalID+' saved successfully.');
+            $('#successAlert'+reviewID).slideDown();  
             $('#saveButton'+reviewID).addClass('btn-success');
             $('#saveButton'+reviewID).removeClass('btn-primary');
             $('#saveButton'+reviewID).html('✔ Saved (Click to Close)');
             $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
-            $('#submitGif'+reviewID).css('display', 'none'); 
 
             console.log('received: '+JSON.stringify(response));
         },
         error: function(response) {
-            // mark review error
+            $('#successAlert'+reviewID).slideUp();
+            $('#errorAlert'+reviewID).html('Error: '+JSON.parse(response.responseText).Error);
+            $('#errorAlert'+reviewID).slideDown();
             console.log(response.status+": "+response.responseText);
         },
         complete: function() {
-            // hide animation
+            $('#submitGif'+reviewID).css('display', 'none');
         }
     });
 }
@@ -275,11 +281,18 @@ $(document).ready(function () {
                     </div>
                     </div>
                     </div>
+
+                    <hr style="margin-top: 2em; margin-bottom: 2em;">
                     
                     <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
                     <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
                     <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
                     <input type="hidden" id="is_complete{{ review.id }}" name="is_comlete{{ review.id }}" value="{{ review|is_complete }}">
+
+                    <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">
+                    </div>
+                    <div class="alert alert-success" id="successAlert{{ review.id }}" style="display: none;">
+                    </div>
 
                     <div class="form-group text-center" style="margin-top: 2em;">
                         <button type="button" class="btn btn-primary" id="saveButton{{ review.id }}" onclick="submitReview({{ review.id }});">

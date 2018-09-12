@@ -68,7 +68,7 @@ class Review(Base):
         int_props = ['id', 'referee_id', 'proposal_id', 'ref_knowledge']
         for prop in properties:
             if prop not in json: 
-                raise ValueError('JSON missing one or more required properties.')
+                raise TypeError('JSON missing one or more required properties.')
             value = json[prop]
             if prop in int_props:
                 value = None if value == '' else int(value)
@@ -86,6 +86,8 @@ class Review(Base):
         properties = ['id', 'referee_id', 'proposal_id', 'comment', 'ref_knowledge', 'score', 'last_updated']
         for prop in properties: 
             json[prop] = getattr(self, prop)
+        if self.proposal != None: # only works if review was fetched from DB
+            json['proposal_eso_id'] = self.proposal.eso_id
         
         return json
 
