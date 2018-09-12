@@ -82,14 +82,15 @@ class Review(Base):
         return review
     
     def to_json(self):
-        json = {}
-        properties = ['id', 'referee_id', 'proposal_id', 'comment', 'ref_knowledge', 'score', 'last_updated']
+        review_json = {}
+        properties = ['id', 'referee_id', 'proposal_id', 'comment', 'ref_knowledge', 'score']
         for prop in properties: 
-            json[prop] = getattr(self, prop)
+            review_json[prop] = getattr(self, prop)
         if self.proposal != None: # only works if review was fetched from DB
-            json['proposal_eso_id'] = self.proposal.eso_id
+            review_json['proposal_eso_id'] = self.proposal.eso_id
+        review_json['last_updated'] = self.last_updated.isoformat(' ')
         
-        return json
+        return review_json
 
     # comment must be a string
     # ref_knowledge must be 1-3
@@ -109,7 +110,11 @@ class Review(Base):
         score_filled = self.score != None
         # todo: conflicts
         return self.is_valid() and comment_filled and ref_knowledge_filled and score_filled
-        
+    
+    def copy_dirty_values_from(self, dirty_review):
+        self.comment = dirty_review.comment
+        self.ref_knowledge = dirty_review.ref_knowledge
+        self.score = dirty_review.score
 
 
 

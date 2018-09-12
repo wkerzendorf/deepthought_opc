@@ -103,7 +103,7 @@ class ReviewSaverService(object):
             response = {'Error': e.args[0]}
             return response
 
-        fetched_review = self.db.query(Review).filter_by(id=submitted_review.id).one()
+        fetched_review = self.db.query(Review).get(submitted_review.id)
         if fetched_review.referee_id != submitted_review.referee_id:
             cherrypy.response.status = 401
             response = {'Error': 'Review does not belong to this user.'}
@@ -114,14 +114,15 @@ class ReviewSaverService(object):
             return response 
 
         try: 
-        #     review.save() ??? 
-        #     review = Review.fetch(...) ?
-            # saved_json = submitted_review.to_json()
-            saved_json = fetched_review.to_json()
-            saved_json['last_updated'] = '2020-01-10 14:00:00'
-            response = {'review': saved_json, 'is_complete': submitted_review.is_complete(), 'token': token}
+            fetched_review.copy_dirty_values_from(submitted_review)
+            #session.commit() ??? i think we are missing a sqlalchemy session to make this work. we need to force sql alchemy to make an UPDATE statement here.
+            #or the session exists and i can't figure out how to access it
+            saved_review = self.db.query(Review).get(submitted_review.id)
+            saved_json = saved_review.to_json()
+            response = {'review': saved_json, 'is_complete': saved_review.is_complete()}
             return response
         except Exception as e:
+            # cherrypy.session.rollback()
             cherrypy.response.status = 500
             response = {'Error': e.args[0]}
             return response

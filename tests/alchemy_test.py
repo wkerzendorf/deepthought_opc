@@ -108,6 +108,32 @@ class ReviewTest(unittest.TestCase):
 
         expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'comment': 'Lorem ipsum dolor sit amet.', 'ref_knowledge': 2, 'score': 1.7, 'last_updated': '2018-09-01 12:00:00.000'}
         self.assertEqual(expected, review.to_json())
+    
+    def test_copy_dirty_values(self):
+        clean = Review()
+        clean.id = 7
+        clean.referee_id = 55
+        clean.proposal_id = 99
+        clean.comment = "Lorem ipsum dolor sit amet."
+        clean.ref_knowledge = 2
+        clean.score = 1.7
+        clean.last_updated = '2018-09-01 12:00:00.000'
+
+        dirty = Review()
+        dirty.id = 7
+        dirty.referee_id = 55
+        dirty.proposal_id = 99
+        dirty.comment = "Lorem ipsum dolor sit amet!!!!!!"
+        dirty.ref_knowledge = 1
+        dirty.score = 2.5
+        dirty.last_updated = '2018-09-01 12:00:00.000'
+
+        clean.copy_dirty_values_from(dirty)
+
+        self.assertEqual(clean.comment, dirty.comment)
+        self.assertEqual(clean.score, dirty.score)
+        self.assertEqual(clean.ref_knowledge, dirty.ref_knowledge)
+
 
 
 
