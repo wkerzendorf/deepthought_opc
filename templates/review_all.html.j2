@@ -124,6 +124,7 @@ function collapseAndChangeSaveButton(reviewID) {
 }
 
 function submitReview(reviewID) {
+    token = "{{ user_token|string }}";
     review = {"id": reviewID};
     review.referee_id = $('#referee_id'+reviewID).val();
     review.proposal_id = $('#proposal_id'+reviewID).val();
@@ -142,7 +143,7 @@ function submitReview(reviewID) {
         type: 'PUT',
         beforeSend: function (xhr) { 
             $('#submitGif'+reviewID).css('display', 'inherit'); 
-        //     xhr.setRequestHeader('Authorization', 'Basic {{ token }}');
+            xhr.setRequestHeader('Authorization', 'Basic '+token);
         },
         dataType: 'json',
         contentType: 'application/json;charset=UTF-8',
@@ -204,7 +205,7 @@ $(document).ready(function () {
 <body>
 <div class="container">
     <div class="row">
-        <h1>Deepthought OPC</h1>
+        <h1>Deepthought OPC {{ user_token }}</h1>
     </div>
     <div class="row">
         <div class="col-10 offset-md-1">

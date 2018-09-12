@@ -8,6 +8,8 @@ from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
 from jinja2 import Environment, FileSystemLoader
 
+import base64
+
 path = os.path.abspath(os.path.dirname(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(path, 'templates')))
 def review_is_complete(review): # defined here to make the method accessible in jinja
@@ -56,10 +58,12 @@ class DTOPC(object):
     @cherrypy.expose
     def display(self, ref_id):
         cherrypy.session['ref_id'] = ref_id
+        id_and_password = ref_id+':'+ref_id
+        user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
         reviews = self.db.query(Referee).filter_by(uuid=ref_id).one().reviews
         template = env.get_template('review_all.html.j2')
 
-        return template.render(reviews=reviews)
+        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews)
 
 
 @cherrypy.expose
@@ -69,8 +73,20 @@ class ReviewSaverService(object):
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     def PUT(self):
+        if 'Authorization' not in cherrypy.request.headers:
+            cherrypy.response.status = 401
+            response = {'Error': 'Missing user token.'}
+            return response 
+
+        token = cherrypy.request.headers['Authorization'][6:]
+        token = base64.b64decode(token).decode('ascii')
+        expected_token = cherrypy.session['ref_id']+":"+cherrypy.session['ref_id']
+        if expected_token != token:
+            cherrypy.response.status = 401
+            response = {'Error': 'Submitted user token does not match session user.'}
+            return response 
+        
         review_json = cherrypy.request.json
-        # todo: get Authorization header (how in cherrypy?) and check against DB first (else return 401 Unauthorized)
         # todo: make sure that review.referee_id == user (else return 401 Unauthorized)
         try:
             review = Review.from_json(review_json)
@@ -90,7 +106,7 @@ class ReviewSaverService(object):
         #     review = Review.fetch(...) ?
             saved_json = review.to_json()
             saved_json['last_updated'] = '2020-01-10 14:00:00'
-            response = {'review': saved_json, 'is_complete': review.is_complete()}
+            response = {'review': saved_json, 'is_complete': review.is_complete(), 'token': token}
             return response
         except Exception as e:
             cherrypy.response.status = 500
