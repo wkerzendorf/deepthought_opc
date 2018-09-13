@@ -21,7 +21,7 @@ class Referee(Base):
     reviews = relationship('Review')
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
-    
+    feedback = Column(Text, default='')
 
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
@@ -53,8 +53,9 @@ class Review(Base):
     ref_knowledge = Column(Integer)
     score = Column(Float)
     last_updated = Column(DateTime, onupdate=datetime.datetime.now)
-    # todo: close_relationship = Column(Boolean, default=False)
-    # todo: direct_competitor = Column(Boolean, default=False)
+    # close relationship = 1
+    # direct competitor = 2
+    conflicted = Column(Integer, default=0)
 
     proposal = relationship('Proposal')
     referee = relationship('Referee')
