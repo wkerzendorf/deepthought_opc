@@ -8,7 +8,6 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-
 class Referee(Base):
     __tablename__ = 'referees'
     # Here we define columns for the table person
