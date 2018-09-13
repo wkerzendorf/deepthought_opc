@@ -43,17 +43,21 @@ class DTOPC(object):
         if cherrypy.session.get('ref_id', None) is not None:
             return self.display(cherrypy.session['ref_id'])
         available_referees = [item[0] for item in self.db.query(Referee.uuid).all()]
-        return """<html>
-          <head></head>
-          <body>
-            <form method="get" action="display">
-              <input type="text" value="{0}" name="ref_id" />
-              <button type="submit">Give it now!</button>
-            </form>
-            available referee ids
-            {1}
-          </body>
-        </html>""".format(available_referees[3], str(available_referees))
+        
+        template = env.get_template('index.html.j2')
+
+        return template.render(some_id=available_referees[3], id_list=available_referees)
+        # return """<html>
+        #   <head></head>
+        #   <body>
+        #     <form method="get" action="display">
+        #       <input type="text" value="{0}" name="ref_id" />
+        #       <button type="submit">Give it now!</button>
+        #     </form>
+        #     available referee ids
+        #     {1}
+        #   </body>
+        # </html>""".format(available_referees[3], str(available_referees))
 
     @cherrypy.expose
     def display(self, ref_id):
