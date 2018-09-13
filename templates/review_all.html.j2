@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Deepthought OPC -- Proposal Review</title>
+<link rel="stylesheet" href="../css/bootstrap.min.css" type="text/css">
+<script type="text/javascript" src="../js/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script>
+function conflictExists(reviewID) {
+    return $('#close_relationship'+reviewID).prop('checked') || $('#direct_competitor'+reviewID).prop('checked');
+}
+
+function grayBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-secondary');
+    badge.removeClass('badge-success');
+    badge.removeClass('badge-danger');
+    badge.removeClass('badge-warning');
+    badge.html(htmlContent);
+}
+
+function greenBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-success');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-danger');
+    badge.removeClass('badge-warning');
+    badge.html(htmlContent);
+}
+
+function redBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-danger');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-success');
+    badge.removeClass('badge-warning');
+    badge.html(htmlContent);
+}
+
+function yellowBadge(badgeID, htmlContent) {
+    badge = $('#'+badgeID);
+    badge.addClass('badge-warning');
+    badge.removeClass('badge-secondary');
+    badge.removeClass('badge-success');
+    badge.removeClass('badge-danger');
+    badge.html(htmlContent);
+}
+
+function updateScoreBadge(reviewID) {
+    currentScore = $('#score'+reviewID).val();
+    badge = $('#badgeScore'+reviewID);
+    if (currentScore == '') {
+        grayBadge('badgeScore'+reviewID, '✘ No score');
+    } else if (currentScore >= 1.0 && currentScore <= 5.0) {
+        greenBadge('badgeScore'+reviewID, '✔ Score: '+currentScore);
+    } else {
+        redBadge('badgeScore'+reviewID, '✘ Invalid Score: '+currentScore);
+    }
+    $('#scoreInfo'+reviewID).val(evalScore(currentScore));
+}
+
+function updateCommentsBadge(reviewID) {
+    currentComments = $('#comment'+reviewID).val();
+    badgeID = 'badgeComments'+reviewID;
+    if (currentComments.trim() == '') {
+        grayBadge(badgeID, '✘ No comments');
+    } else if (currentComments.length > 10) {
+        greenBadge(badgeID, '✔ Comments ('+currentComments.length+' chars)');
+    } else {
+        redBadge(badgeID, '✘ Comments('+currentComments.length+' chars)');
+    }
+}
+
+function updateExpertiseBadge(reviewID) {
+    currentExpertise = $('#ref_knowledge'+reviewID).val();
+    badgeID = 'badgeExpertise'+reviewID;
+    if (currentExpertise == '') {
+        grayBadge(badgeID, '✘ Expertise missing');
+    } else {
+        greenBadge(badgeID, '✔ Expertise: '+currentExpertise);
+    } 
+}
+
+function updateSavedBadge(reviewID, lastUpdated, isComplete) {
+    badgeID = 'badgeSaved'+reviewID;
+    if (lastUpdated == undefined) {
+        lastUpdated = $('#last_updated'+reviewID).val();
+    }
+    if (isComplete == undefined) {
+        isComplete = ["true", "True", true].includes($('#is_complete'+reviewID).val());
+    }
+    if (lastUpdated == '') {
+        grayBadge(badgeID, '✘ Review not saved');
+    } else if (!isComplete) {
+        yellowBadge(badgeID, '✔ Saved ('+lastUpdated+')');
+    } else {
+        greenBadge(badgeID, '✔ Saved ('+lastUpdated+')');
+    }
+}
+
+// when either conflict is checked, the other inputs for that review should be disabled:
+function toggleConflictOverride(reviewID) {
+    if (conflictExists(reviewID)) {
+        $('.badgeReview'+reviewID).css('display', 'none');
+        $('#badgeConflict'+reviewID).css('display', 'inline-block');
+        $('.reviewInput'+reviewID).attr('disabled', true);
+    } else {
+        $('.badgeReview'+reviewID).css('display', 'inline-block');
+        $('#badgeConflict'+reviewID).css('display', 'none');
+        $('.reviewInput'+reviewID).attr('disabled', false);
+    }
+}
+
+// converts float scale to words:
+function evalScore(grade) {
+    if (grade === '') {
+        return 'no score given';
+    }
+    if (grade < 1.0 || grade > 5.0) {
+        return 'invalid score';
+    }
+    const signposts = ['outstanding', 'excellent', 'very good', 'good', 'fair', 'rather weak', 'weak', 'very weak', 'rejected'];
+    gradePosition = (grade*10) / 5 - 2; // outstanding for a grade of 1.0, etc.
+
+    gradeIsFlat = (grade*10) % 5 === 0; // signpost grades are all multiples of 0.5
+    if (gradeIsFlat) {    
+        return signposts[gradePosition];
+    } else { // gradePosition is float
+        between = 'between ';
+        for (i = 0; i < signposts.length; i++) {
+            if (gradePosition > i && gradePosition < i+1) {
+                between += signposts[i]+' and '+signposts[i+1];
+            }
+        }
+        return between;
+    }
+}
+
+// collapse accordion; "save" button -> "update" in case user wants more changes
+function collapseAndChangeSaveButton(reviewID) {
+    $('.collapse').collapse('hide');
+    $('#successAlert'+reviewID).slideUp();
+    $('#saveButton'+reviewID).removeClass('btn-success');
+    $('#saveButton'+reviewID).addClass('btn-primary');
+    $('#saveButton'+reviewID).html('Update');
+    $('#saveButton'+reviewID).attr('onclick', "submitReview("+reviewID+");");
+}
+
+function submitReview(reviewID) {
+    token = "{{ user_token|string }}";
+    review = {"id": reviewID};
+    review.referee_id = $('#referee_id'+reviewID).val();
+    review.proposal_id = $('#proposal_id'+reviewID).val();
+    review.comment = $('#comment'+reviewID).val();
+    review.ref_knowledge = $('#ref_knowledge'+reviewID).val();
+    review.score = $('#score'+reviewID).val();
+    review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
+    review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
+    review.last_updated = $('#last_updated'+reviewID).val();
+
+    console.log('sending: '+JSON.stringify(review));
+    
+    
+    $.ajax({
+        url: '/save_review',
+        type: 'PUT',
+        beforeSend: function (xhr) { 
+            $('#submitGif'+reviewID).css('display', 'inherit'); 
+            xhr.setRequestHeader('Authorization', 'Basic '+token);
+        },
+        dataType: 'json',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify(review),
+        success: function(response) {
+            refillSubmittedReview(response);
+            proposalID = response.review.proposal_id; // todo: use review.proposal.eso_id
+            updateSavedBadge(reviewID);
+    
+            $('#errorAlert'+reviewID).slideUp();
+            $('#successAlert'+reviewID).html('Review for '+proposalID+' saved successfully.');
+            $('#successAlert'+reviewID).slideDown();  
+            $('#saveButton'+reviewID).addClass('btn-success');
+            $('#saveButton'+reviewID).removeClass('btn-primary');
+            $('#saveButton'+reviewID).html('✔ Saved (Click to Close)');
+            $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
+
+            console.log('received: '+JSON.stringify(response));
+        },
+        error: function(response) {
+            $('#successAlert'+reviewID).slideUp();
+            $('#errorAlert'+reviewID).html('Error: '+JSON.parse(response.responseText).Error);
+            $('#errorAlert'+reviewID).slideDown();
+            console.log(response.status+": "+response.responseText);
+        },
+        complete: function() {
+            $('#submitGif'+reviewID).css('display', 'none');
+        }
+    });
+}
+
+function refillSubmittedReview(json) {
+    review = json.review
+    reviewID = review.id
+    $('#comment'+reviewID).val(review.comment);
+    // $('#ref_knowledge'+reviewID).val(); need to find appropriate element and apply selected?
+    $('#score'+reviewID).val(review.score);
+    //review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
+    //review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
+    $('#last_updated'+reviewID).val(review.last_updated);
+    $('#is_complete'+reviewID).val(json.is_complete);
+}
+
+function submitAllReviews() {
+    if (window.confirm('Are you sure you want to submit all reviews and your feedback? You will not be able to edit anything after submission.')) {
+        // check that all reviews are complete
+        // make json
+        // submit with ajax
+        console.log('submitted all!');
+        // if failure: handle
+        // if success: redirect to thank-you page
+    }
+}
+
+$(document).ready(function () {
+    {% for review in reviews %}
+        updateScoreBadge({{ review.id }});
+        updateCommentsBadge({{ review.id }});
+        updateExpertiseBadge({{ review.id }});
+        toggleConflictOverride({{ review.id }});
+        updateSavedBadge({{ review.id }});
+    {% endfor %}
+});
+</script>
+<style>
+.scoreInfo {
+    font-style: italic;
+    font-size: .9em;
+}
+</style>
+</head>
+
+
+<body>
+<div class="container">
+    <div class="row">
+        <h1>Deepthought OPC</h1>
+    </div>
+    <div class="row">
+        <div class="col-10 offset-md-1">
+            <div style="padding-top: 2em;"></div>
+
+            {# <div class="card"> #}
+            {# <div class="card-body"> #}
+            <p style="padding-bottom: 1em;">Thank you for participating. You must give a score, comments, and expertise rating for each proposal for the review to be considered complete. (In case you have a conflict, check one or both of the boxes provided. You may leave the other fields empty.) You may save a review before completing it; you may also edit a completed review. Once you have completed all reviews, please provide feedback in the bottom text box and click the &ldquo;Submit All Reviews&rdquo; button. Once you have made this submission, the reviews may no longer be edited.
+{#             
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus a libero purus. Vivamus sed dictum erat, sit amet iaculis elit. Nam magna ex, volutpat at sagittis nec, vehicula quis magna. Mauris facilisis consectetur feugiat. Nullam malesuada rhoncus lacinia. Praesent maximus auctor velit, ornare maximus sem. Curabitur cursus vestibulum scelerisque. Sed vestibulum dui sed vestibulum mollis. Duis vitae blandit quam. Aliquam eget leo vel ante elementum finibus at volutpat enim. Praesent mattis dictum felis nec malesuada. Nam a ligula et leo malesuada vehicula.#}
+            </p>
+            {# </div> #}
+            {# </div> #}
+
+            <div class="card">
+            <div class="card-header">Grading Scale</div>
+            <div class="card-body">
+            <dl class="row">
+            <dt class="col-sm-1">1.0</dt>
+            <dd class="col-sm-11">outstanding: breakthrough science</dt>
+            <dt class="col-sm-1">1.5</dt>
+            <dd class="col-sm-11">excellent: definitely above average</dt>
+            <dt class="col-sm-1">2.0</dt>
+            <dd class="col-sm-11">very good: no significant weaknesses</dt>
+            <dt class="col-sm-1">2.5</dt>
+            <dd class="col-sm-11">good: minor deficiencies do not detract from strong scientific case</dt>
+            <dt class="col-sm-1">3.0</dt>
+            <dd class="col-sm-11">fair: good scientific case, but with definite weaknesses</dt>
+            <dt class="col-sm-1">3.5</dt>
+            <dd class="col-sm-11">rather weak: limited science return prospects</dt>
+            <dt class="col-sm-1">4.0</dt>
+            <dd class="col-sm-11">weak: little scientific value and/or questionable scientific strategy</dt>
+            <dt class="col-sm-1">4.5</dt>
+            <dd class="col-sm-11">very weak: deficiencies outweigh strengths</dt>
+            <dt class="col-sm-1">5.0</dt>
+            <dd class="col-sm-11">rejected</dt>
+            </dl>
+
+            <p>The full grade scale should be used so as to ensure that the resulting ranking of the proposals is as meaningful as possible. Grades assigned by individual referees can and should be specified with one decimal digit (e.g. 2.7).</p>
+            <p>The following questions should be considered for the grading:
+            <ul>
+            <li>Is there sufficient background/context for the non-expert (i.e., someone not specialized in this particular sub-field)?</li>
+            <li>Are previous results (either by proposers themselves or in the published literature) clearly presented?</li>
+            <li>Are the proposed observations and the Immediate Objectives pertinent to the background description?</li>
+            <li>Is the sample selection clearly described, or, if a single target, is its choice justified?</li>
+            <li>Are the instrument modes, and target location(s) (e.g., cosmology fields) specified clearly?</li>
+            <li>Will the proposed observations add significantly to the knowledge of this particular field?</li>
+            </ul>
+            </p>
+            </div>
+            </div>
+
+            <div style="padding-top: 2em;"></div>
+
+            <h2>Proposals for you to referee:</h2>
+
+            <form method="post">
+            
+            <div class="accordion" id="proposalsAccordion">
+            
+            {% for review in reviews %}
+
+            <div class="card">
+                <div class="card-header" id="heading{{ review.id }}">
+                    <div class="row">
+                    <div class="col-12">
+                    <h5 class="mb-0" style="display: inline-block;">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse{{ review.id }}" aria-expanded="true" aria-controls="collapse{{ review.id }}">
+                        {{ review.proposal.eso_id }}: {{ review.proposal.title }}
+                    </button>
+                    </h5>
+                    </div>
+
+                    <div class="col-12 text-right" style="padding-top: .5em;">
+                    <span class="badge badge-info" id="badgeConflict{{ review.id }}">Conflict exists</span>
+                    <span class="badge badge-secondary badgeReview{{ review.id }}" id="badgeScore{{ review.id }}">✘ No score</span>
+                    <span class="badge badge-secondary badgeReview{{ review.id }}" id="badgeComments{{ review.id }}">✘ No comments</span>
+                    <span class="badge badge-secondary badgeReview{{ review.id }}" id="badgeExpertise{{ review.id }}">✘ No expertise</span>
+                    &nbsp;&nbsp;&nbsp;
+                    <span class="badge badge-secondary" id="badgeSaved{{ review.id }}">✘ Review not saved</span>
+                    </div>
+                    </div>
+                </div>
+            
+                <div id="collapse{{ review.id }}" class="collapse" aria-labelledby="heading{{ review.id }}" data-parent="#proposalsAccordion">
+                    <div class="card-body">
+                    <p>{{ review.proposal.abstract }}</p>
+
+                    <p><a href="#">View Proposal PDF</a></p>
+
+                    <div class="form-row">
+                    <div class="form-group col-4">
+                        <label for="score{{ review.id }}">Proposal Score</label>
+                        <input type="number" class="form-control reviewInput{{ review.id }}" id="score{{ review.id }}" name="score{{ review.id }}" placeholder="1.0 - 5.0" step="0.1" min="1" max="5" onchange="updateScoreBadge({{ review.id }});" onkeyup="updateScoreBadge({{ review.id }});" value="{% if review.score != None %}{{ review.score|round(1) }}{% endif %}" aria-describedby="score{{ review.id }}HelpBlock">
+                        <small id="score{{ review.id }}HelpBlock" class="form-text text-muted">Scores range from 1.0 (excellent) to 5.0 (rejected)</small>
+                    </div>
+                    <div class="form-group col-8">
+                        <label for="scoreInfo{{ review.id }}" style="visibility: hidden;">Score Info</label>
+                        <input type="text" readonly class="form-control-plaintext scoreInfo" id="scoreInfo{{ review.id }}" value="" style="text-decoration: italic;">
+                    </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment{{ review.id }}">Comments</label>
+                        <textarea class="form-control reviewInput{{ review.id }}" id="comment{{ review.id }}" name="comment{{ review.id }}" rows="3" onchange="updateCommentsBadge({{ review.id }});" onkeyup="updateCommentsBadge({{ review.id }});">{% if review.comment != None %}{{ review.comment }}{% endif %}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ref_knowledge{{ review.id }}">Your Expertise</label>
+                        <select class="form-control reviewInput{{ review.id }}" id="ref_knowledge{{ review.id }}" name="ref_knowledge{{ review.id }}" onchange="updateExpertiseBadge({{ review.id }});">
+                            <option value="">Please choose one</option>
+                            <option value="1" {% if review.ref_knowledge == 1 %}selected{% endif %}>(1) This is my field of expertise.</option>
+                            <option value="2" {% if review.ref_knowledge == 2 %}selected{% endif %}>(2) I have some general knowledge of this field.</option>
+                            <option value="3" {% if review.ref_knowledge == 3 %}selected{% endif %}>(3) I have little or no knowledge of this field.</option>
+                        </select>
+                    </div>
+
+                    <hr style="margin-top: 2em; margin-bottom: 2em;">
+
+                    <h5 class="text-center">Or: I cannot review this proposal, because I have a conflict:</h5>
+                    <div class="row">
+                    <div class="col-8 offset-md-2">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="close_relationship{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="close_relationship{{ review.id }}" class="form-check-label"> I have a close personal or professional relationship with the PI.</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="direct_competitor{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="direct_competitor{{ review.id }}" class="form-check-label"> I am a direct competitor to this proposal.</label>
+                    </div>
+                    </div>
+                    </div>
+
+                    <hr style="margin-top: 2em; margin-bottom: 2em;">
+                    
+                    <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
+                    <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
+                    <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
+                    <input type="hidden" id="is_complete{{ review.id }}" name="is_comlete{{ review.id }}" value="{{ review|is_complete }}">
+
+                    <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">
+                    </div>
+                    <div class="alert alert-success" id="successAlert{{ review.id }}" style="display: none;">
+                    </div>
+
+                    <div class="form-group text-center" style="margin-top: 2em;">
+                        <button type="button" class="btn btn-primary" id="saveButton{{ review.id }}" onclick="submitReview({{ review.id }});">
+                            <img src="../img/ajax-loader.gif" id="submitGif{{ review.id }}" class="submitGif" style="display: none;">
+                            &nbsp;Save this Review
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="$('.collapse').collapse('hide');">Close without Submitting</button>
+                    </div>
+                    </div> {# /.card-body #}
+                </div> {# /#collapse #}
+            </div>
+
+            {% endfor %}
+
+            </div> {# /proposalsAccordion #}
+
+            <div class="form-group">
+            <h3 style="padding-top: 2em;"><label for="referee_comments">Your feedback:</label></h3>
+            <textarea class="form-control" id="referee_comments" name="referee_comments"></textarea>
+            </div>
+
+            <hr style="padding-top: 1em; padding-bottom: 1em;">
+
+            <div class="form-group text-center">
+            <button class="btn btn-primary btn-lg" type="button" onclick="submitAllReviews();">Submit All Reviews</button>
+            </div>
+
+            </form>
+
+            <div style="padding-top: 4em;"></div>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
