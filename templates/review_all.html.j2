@@ -3,7 +3,7 @@
 {% block scripts %}
 <script>
 function conflictExists(reviewID) {
-    return $('#close_relationship'+reviewID).prop('checked') || $('#direct_competitor'+reviewID).prop('checked');
+    return $('#conflicted'+reviewID).val() != 0;
 }
 
 function grayBadge(badgeID, htmlContent) {
@@ -142,17 +142,25 @@ function collapseAndChangeSaveButton(reviewID) {
     $('#saveButton'+reviewID).attr('onclick', "submitReview("+reviewID+");");
 }
 
+function makeJsonOfReview(reviewID) {
+    review = {"id": reviewID};
+    review.referee_id = parseInt($('#referee_id'+reviewID).val());
+    review.proposal_id = parseInt($('#proposal_id'+reviewID).val());
+
+    review.comment = $('#comment'+reviewID).val();
+    refKnowledge = $('#ref_knowledge'+reviewID).val();
+    score = $('#score'+reviewID).val();
+    review.ref_knowledge = refKnowledge == "" ? "" : parseInt(refKnowledge);
+    review.score = score == "" ? "" : parseFloat(score);
+    review.conflicted = parseInt($('#conflicted'+reviewID).val());
+    review.last_updated = $('#last_updated'+reviewID).val();
+
+    return review;
+}
+
 function submitReview(reviewID) {
     token = "{{ user_token|string }}";
-    review = {"id": reviewID};
-    review.referee_id = $('#referee_id'+reviewID).val();
-    review.proposal_id = $('#proposal_id'+reviewID).val();
-    review.comment = $('#comment'+reviewID).val();
-    review.ref_knowledge = $('#ref_knowledge'+reviewID).val();
-    review.score = $('#score'+reviewID).val();
-    review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
-    review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
-    review.last_updated = $('#last_updated'+reviewID).val();
+    review = makeJsonOfReview(reviewID);
 
     console.log('sending: '+JSON.stringify(review));
     
@@ -198,10 +206,11 @@ function refillSubmittedReview(json) {
     review = json.review
     reviewID = review.id
     $('#comment'+reviewID).val(review.comment);
-    // $('#ref_knowledge'+reviewID).val(); need to find appropriate element and apply selected?
+    $('#ref_knowledge'+reviewID+' option').prop('selected', false);
+    $('#ref_knowledge'+reviewID+' option[value='+review.ref_knowledge+']').prop('selected', true);
     $('#score'+reviewID).val(review.score);
-    //review.close_relationship = $('#close_relationship'+reviewID).prop('checked');
-    //review.direct_competitor = $('#direct_competitor'+reviewID).prop('checked');
+    $('#conflicted'+reviewID+' option').prop('selected', false);
+    $('#conflicted'+reviewID+' option[value='+review.conflicted+']').prop('selected', true);
     $('#last_updated'+reviewID).val(review.last_updated);
     $('#is_complete'+reviewID).val(json.is_complete);
 }
@@ -320,6 +329,29 @@ $(document).ready(function () {
 
                     <p><a href="#">View Proposal PDF</a></p>
 
+                    <hr style="margin-top: 2em; margin-bottom: 2em;">
+
+                    {# <h5 class="text-center">I cannot review this proposal, because I have a conflict:</h5>
+                    <div class="row">
+                    <div class="col-8 offset-md-2">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="close_relationship{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="close_relationship{{ review.id }}" class="form-check-label"> I have a close personal or professional relationship with the PI.</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="direct_competitor{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="direct_competitor{{ review.id }}" class="form-check-label"> I am a direct competitor to this proposal.</label>
+                    </div>
+                    </div>
+                    </div> #}
+
+                    <div class="form-group">
+                        <label for="conflicted{{ review.id }}">Do you have a conflict that prevents you from referreeing this proposal?</label>
+                        <select class="form-control" id="conflicted{{ review.id }}" name="conflicted{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});">
+                            <option value="0">No, I do not have a conflict.</option>
+                            <option value="1" {% if review.conflicted == 1 %}selected{% endif %}>Yes, I have a close personal or professional relationship with the PI.</option>
+                            <option value="2" {% if review.conflicted == 2 %}selected{% endif %}>Yes, I am a direct competitor to this proposal.</option>
+                        </select>
+                    </div>
+
                     <div class="form-row">
                     <div class="form-group col-4">
                         <label for="score{{ review.id }}">Proposal Score</label>
@@ -348,25 +380,11 @@ $(document).ready(function () {
                     </div>
 
                     <hr style="margin-top: 2em; margin-bottom: 2em;">
-
-                    <h5 class="text-center">Or: I cannot review this proposal, because I have a conflict:</h5>
-                    <div class="row">
-                    <div class="col-8 offset-md-2">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="close_relationship{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="close_relationship{{ review.id }}" class="form-check-label"> I have a close personal or professional relationship with the PI.</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="direct_competitor{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});"><label for="direct_competitor{{ review.id }}" class="form-check-label"> I am a direct competitor to this proposal.</label>
-                    </div>
-                    </div>
-                    </div>
-
-                    <hr style="margin-top: 2em; margin-bottom: 2em;">
                     
                     <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
                     <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
                     <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
-                    <input type="hidden" id="is_complete{{ review.id }}" name="is_comlete{{ review.id }}" value="{{ review|is_complete }}">
+                    <input type="hidden" id="is_complete{{ review.id }}" name="is_complete{{ review.id }}" value="{{ review|is_complete }}">
 
                     <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">
                     </div>

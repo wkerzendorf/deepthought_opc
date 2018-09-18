@@ -94,39 +94,39 @@ class ReviewSaverService(object):
             return response 
         
         submitted_review_json = cherrypy.request.json
+        # ensure that submitted review matches db and is valid:
         try:
-            submitted_review = Review.from_json(submitted_review_json)
-            if not submitted_review.is_valid():
+            if 'id' not in submitted_review_json:
+                raise TypeError('Review missing id.')
+            review = self.db.query(Review).get(submitted_review_json['id'])
+            review.update_from_json(submitted_review_json)
+            # if review.referee_id != cherrypy.session['ref_id']:
+            #     raise ValueError('Review does not belong to this referee.')
+            if not review.is_valid():
                 raise ValueError('Review has one or more invalid values (e.g., score out of range).')
         except TypeError as e: # raised if JSON is missing an element
+            self.db.rollback()
             cherrypy.response.status = 400
             response = {'Error': e.args[0]}
             return response
-        except ValueError as e:
-            cherrypy.response.status = 422
-            response = {'Error': e.args[0]}
+        except ValueError as e: # raised if invalid or an id doesn't match
+            self.db.rollback()
+            reason = e.args[0]
+            # 401 Unauthorized if the submitter is trying to edit someone else's review; else 422 Unprocessable Entity
+            cherrypy.response.status = 401 if reason == 'Review does not belong to this referee.' else 422
+            response = {'Error': reason}
             return response
 
-        fetched_review = self.db.query(Review).get(submitted_review.id)
-        if fetched_review.referee_id != submitted_review.referee_id:
-            cherrypy.response.status = 401
-            response = {'Error': 'Review does not belong to this user.'}
-            return response 
-        if fetched_review.proposal_id != submitted_review.proposal_id:
-            cherrypy.response.status = 422
-            response = {'Error': 'Proposal IDs do not match. Please contact administrator.'}
-            return response 
 
+        # save the updated review and return JSON:
         try: 
-            fetched_review.copy_dirty_values_from(submitted_review)
-            #session.commit() ??? i think we are missing a sqlalchemy session to make this work. we need to force sql alchemy to make an UPDATE statement here.
-            #or the session exists and i can't figure out how to access it
-            saved_review = self.db.query(Review).get(submitted_review.id)
-            saved_json = saved_review.to_json()
-            response = {'review': saved_json, 'is_complete': saved_review.is_complete()}
+            self.db.commit()
+            review = self.db.query(Review).get(submitted_review_json['id'])
+            saved_json = review.to_json()
+            response = {'review': saved_json, 'is_complete': review.is_complete()}
             return response
         except Exception as e:
-            # cherrypy.session.rollback()
+            self.db.rollback()
             cherrypy.response.status = 500
             response = {'Error': e.args[0]}
             return response
