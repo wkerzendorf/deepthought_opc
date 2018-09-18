@@ -189,6 +189,8 @@ function submitReview(reviewID) {
             $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
 
             console.log('received: '+JSON.stringify(response));
+
+            toggleSubmitAllButtonAccess();
         },
         error: function(response) {
             $('#successAlert'+reviewID).slideUp();
@@ -213,6 +215,30 @@ function refillSubmittedReview(json) {
     $('#conflicted'+reviewID+' option[value='+review.conflicted+']').prop('selected', true);
     $('#last_updated'+reviewID).val(review.last_updated);
     $('#is_complete'+reviewID).val(json.is_complete);
+}
+
+function allReviewsComplete() {
+    completions = $('.is_complete').filter(function (i) { 
+         return ["true", "True", true].includes($(this).val()); 
+    });
+    return completions.length == $('.review').length;
+}
+
+function toggleSubmitAllButtonAccess() {
+    button = $('#submitAllButton');
+    if (allReviewsComplete()) {
+        button.removeClass('btn-secondary');
+        button.addClass('btn-primary');
+        button.attr('onclick', 'submitAllReviews();');
+        button.removeAttr('title');
+        button.prop('disabled', false);
+    } else {
+        button.removeClass('btn-primary');
+        button.addClass('btn-secondary');
+        button.removeAttr('onclick');
+        button.attr('title', 'Please complete and save all reviews individually first.');
+        button.prop('disabled', true);
+    }
 }
 
 function submitAllReviews() {
@@ -301,7 +327,7 @@ $(document).ready(function () {
             
             {% for review in reviews %}
 
-            <div class="card">
+            <div class="card review">
                 <div class="card-header" id="heading{{ review.id }}">
                     <div class="row">
                     <div class="col-12">
@@ -384,7 +410,7 @@ $(document).ready(function () {
                     <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
                     <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
                     <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
-                    <input type="hidden" id="is_complete{{ review.id }}" name="is_complete{{ review.id }}" value="{{ review|is_complete }}">
+                    <input type="hidden" id="is_complete{{ review.id }}" class="is_complete" name="is_complete{{ review.id }}" value="{{ review|is_complete }}">
 
                     <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">
                     </div>
@@ -414,7 +440,14 @@ $(document).ready(function () {
             <hr style="padding-top: 1em; padding-bottom: 1em;">
 
             <div class="form-group text-center">
-            <button class="btn btn-primary btn-lg" type="button" onclick="submitAllReviews();">Submit All Reviews</button>
+            {% if all_complete %}
+                <button class="btn btn-primary btn-lg" type="button" id="submitAllButton" onclick="submitAllReviews();">
+            {% else %}
+                <button class="btn btn-secondary btn-lg" type="button" id="submitAllButton" onclick="submitAllReviews();" title="Please complete and save all reviews individually first." disabled>
+            {% endif %}
+            Submit All Reviews</button>
+
+            <a class="btn btn-secondary btn-lg" href="logout">Logout</a>
             </div>
 
             </form>

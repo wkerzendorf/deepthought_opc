@@ -41,12 +41,12 @@ class DTOPC(object):
     def index(self):
         cherrypy.session.load()
         if cherrypy.session.get('ref_id', None) is not None:
-            return self.display(cherrypy.session['ref_id'])
+            raise cherrypy.HTTPRedirect("/display")
         available_referees = [item[0] for item in self.db.query(Referee.uuid).all()]
         
         template = env.get_template('index.html.j2')
 
-        return template.render(some_id=available_referees[3], id_list=available_referees)
+        return template.render(ref_id=None, some_id=available_referees[3], id_list=available_referees)
         # return """<html>
         #   <head></head>
         #   <body>
@@ -60,14 +60,34 @@ class DTOPC(object):
         # </html>""".format(available_referees[3], str(available_referees))
 
     @cherrypy.expose
-    def display(self, ref_id):
+    def login(self, ref_id=None):
+        if ref_id is None: # i.e., route visited without form submission
+            if cherrypy.session.get('ref_id', None) is not None:
+                raise cherrypy.HTTPRedirect("/display")
+            else:
+                raise cherrypy.HTTPRedirect("/")
         cherrypy.session['ref_id'] = ref_id
+        raise cherrypy.HTTPRedirect("/display")
+
+    @cherrypy.expose
+    def display(self):
+        if cherrypy.session.get('ref_id', None) is None: # if user is not logged in, redirect them to index
+            raise cherrypy.HTTPRedirect("/")
+        ref_id = cherrypy.session['ref_id']
         id_and_password = ref_id+':'+ref_id
         user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
         reviews = self.db.query(Referee).filter_by(uuid=ref_id).one().reviews
         template = env.get_template('review_all.html.j2')
+        all_complete = all([review.is_complete() for review in reviews])
 
-        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews)
+        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete)
+    
+    @cherrypy.expose
+    def logout(self):
+        cherrypy.session.delete()
+        template = env.get_template('logout.html.j2')
+        return template.render(ref_id=None)
+
 
 
 @cherrypy.expose
@@ -80,6 +100,10 @@ class ReviewSaverService(object):
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     def PUT(self):
+        if 'ref_id' not in cherrypy.session:
+            cherrypy.response.status = 401
+            response = {'Error': 'Your session has expired. Please log in again.'}
+            return response 
         if 'Authorization' not in cherrypy.request.headers:
             cherrypy.response.status = 401
             response = {'Error': 'Missing user token.'}
@@ -100,8 +124,8 @@ class ReviewSaverService(object):
                 raise TypeError('Review missing id.')
             review = self.db.query(Review).get(submitted_review_json['id'])
             review.update_from_json(submitted_review_json)
-            # if review.referee_id != cherrypy.session['ref_id']:
-            #     raise ValueError('Review does not belong to this referee.')
+            if review.referee.uuid != cherrypy.session['ref_id']:
+                raise ValueError('Review does not belong to this referee.')
             if not review.is_valid():
                 raise ValueError('Review has one or more invalid values (e.g., score out of range).')
         except TypeError as e: # raised if JSON is missing an element
