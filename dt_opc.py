@@ -36,6 +36,11 @@ class DTOPC(object):
     @property
     def db(self):
         return cherrypy.request.db
+    
+    # for certain routes, if the user is not logged in, send them to index:
+    def logged_out_redirect(self):
+        if cherrypy.session.get('ref_id', None) is None: 
+            raise cherrypy.HTTPRedirect("/")
 
     @cherrypy.expose
     def index(self):
@@ -47,22 +52,11 @@ class DTOPC(object):
         template = env.get_template('index.html.j2')
 
         return template.render(ref_id=None, some_id=available_referees[3], id_list=available_referees)
-        # return """<html>
-        #   <head></head>
-        #   <body>
-        #     <form method="get" action="display">
-        #       <input type="text" value="{0}" name="ref_id" />
-        #       <button type="submit">Give it now!</button>
-        #     </form>
-        #     available referee ids
-        #     {1}
-        #   </body>
-        # </html>""".format(available_referees[3], str(available_referees))
 
     @cherrypy.expose
     def login(self, ref_id=None):
-        if ref_id is None: # i.e., route visited without form submission
-            if cherrypy.session.get('ref_id', None) is not None:
+        if ref_id is None: # i.e., route visited without form submission...
+            if cherrypy.session.get('ref_id', None) is not None: # user already logged in
                 raise cherrypy.HTTPRedirect("/display")
             else:
                 raise cherrypy.HTTPRedirect("/")
@@ -70,10 +64,35 @@ class DTOPC(object):
         raise cherrypy.HTTPRedirect("/display")
 
     @cherrypy.expose
-    def display(self):
-        if cherrypy.session.get('ref_id', None) is None: # if user is not logged in, redirect them to index
-            raise cherrypy.HTTPRedirect("/")
+    def agreement(self): # display the agreement text and form
+        self.logged_out_redirect()
         ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        if referee.accepted_tou: # no need to agree if already done
+            raise cherrypy.HTTPRedirect("/display")
+        template = env.get_template('agreement.html.j2')
+
+        return template.render(ref_id=ref_id)
+    
+    @cherrypy.expose
+    def process_agreement(self, agree=None): # record the referee's agreement and redirect to display
+        self.logged_out_redirect()
+        if agree not in [1, "1"]:
+            raise cherrypy.HTTPRedirect("/agreement")
+        ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        referee.accepted_tou = True
+        self.db.commit()
+        raise cherrypy.HTTPRedirect("/display")
+
+    @cherrypy.expose
+    def display(self):
+        self.logged_out_redirect()
+        ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        if not referee.accepted_tou:
+            raise cherrypy.HTTPRedirect("/agreement")
+
         id_and_password = ref_id+':'+ref_id
         user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
         reviews = self.db.query(Referee).filter_by(uuid=ref_id).one().reviews
@@ -132,6 +151,8 @@ class ReviewSaverService(object):
             review.update_from_json(submitted_review_json)
             if review.referee.uuid != cherrypy.session['ref_id']:
                 raise ValueError('Review does not belong to this referee.')
+            if not review.referee.accepted_tou:
+                raise ValueError('Referee has not accepted the confidentiality terms.')
             if not review.is_valid():
                 raise ValueError('Review has one or more invalid values (e.g., score out of range).')
         except TypeError as e: # raised if JSON is missing an element
@@ -142,8 +163,8 @@ class ReviewSaverService(object):
         except ValueError as e: # raised if invalid or an id doesn't match
             self.db.rollback()
             reason = e.args[0]
-            # 401 Unauthorized if the submitter is trying to edit someone else's review; else 422 Unprocessable Entity
-            cherrypy.response.status = 401 if reason == 'Review does not belong to this referee.' else 422
+            unauthorized_reasons = ['Review does not belong to this referee.', 'Referee has not accepted the confidentiality terms.']
+            cherrypy.response.status = 401 if reason in unauthorized_reasons else 422
             response = {'Error': reason}
             return response
 

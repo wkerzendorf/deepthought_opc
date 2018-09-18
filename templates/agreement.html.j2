@@ -1,0 +1,96 @@
+{% extends "base.html.j2" %}
+
+{% block scripts %}
+<script>
+function toggleSubmitAccess() {
+    if ($('#agree').prop('checked')) {
+        $('#submitButton').prop('disabled', false);
+    } else {
+        $('#submitButton').prop('disabled', true);
+    }
+}
+</script>
+{% endblock %}
+
+
+{% block styles %}
+<style>
+#clauses {
+    counter-reset: list;
+}
+#clauses > li {
+    list-style: none;
+    position: relative;
+}
+#clauses > li:before {
+    counter-increment: list;
+    content: "(" counter(list, lower-alpha) ") ";
+    position: absolute;
+    left: -1.4em;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+    <div class="col-md-10 offset-md-1">
+    <h2 class="mt-4">Confidentiality Agreement</h2>
+    <p class="mt-4">Before participating, you must agree to the terms of the refereeing process.</p>
+
+    <p>In accordance with the Terms of Reference and Rules of Procedure of the ESO Observing Programmes Committee (<a href="http://www.eso.org/public/about-eso/committees/opc/docs/OPC_ToR2013.pdf" target="_blank">approved by ESO Council on 04.12.2013</a>), I acknowledge that during the term of my membership I may be given or have access to confidential information which may be supplied in tangible form or verbally or by demonstration (&lsquo;the Confidential Information&rsquo;). I understand that observing proposals and the respective discussions at OPC are considered Confidential Information, as they may contain unpublished research and/or proprietary information. I further acknowledge that the Confidential Information will be made available to me only for the purpose to
+    
+    <ul>
+        <li>fulfil my duties as a member of the ESO OPC and its Experts Panels in accordance with the Terms of Reference and Rules of Procedure of the ESO Observing Programmes Committee, </li>
+    </ul>
+    (&lsquo;the Permitted Purpose&rsquo;)
+    </p>
+
+    <p>
+    I AGREE:
+    <ol type="a" id="clauses">
+    <li>to use the Confidential Information only for the Permitted Purpose;</li>
+    <li>to keep the Confidential Information secret and confidential and not to disclose it in any form to any third party (including to any persons or party at my employer, including research colleagues, graduate students, postdoctoral or research associates) without the prior written consent of ESO;</li>
+    <li>on the written request of ESO to deliver to ESO any tangible items of Confidential Information in my possession;</li>
+    </ol>
+    </p>
+
+    <p>I understand that this Confidentiality Agreement does not apply to any item of Confidential Information, which is disclosed to me by any third party without the breach of the present Confidentiality Agreement, or which comes into the public domain through no fault of mine, but that otherwise this Agreement will continue in force without limit of time. ESO may release me in writing from the Agreement.</p>
+    
+    <p>I hereby confirm that I understood and will comply with the above confidentiality requirements.</p>
+    
+
+    <form method="post" action="process_agreement">
+        <div class="form-row mt-4">
+        <div class="col-12 text-center">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" name="agree" id="agree" onchange="toggleSubmitAccess();" required>
+            <label class="form-check-label" for="agree">I agree to the terms described above.</label>
+        </div>
+        </div>
+        </div>
+        
+        {# <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="refereeName">Your name:</label>
+                <input type="text" class="form-input" id="refereeName">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="refereeName">Your name:</label>
+                <input type="text" class="form-input" id="refereeName">
+            </div>
+        </div> #}
+        
+        <div class="form-row mt-4">
+        <div class="col-12 text-center">
+            <p><em>A PDF download is available if you would like a copy of this agreement for your records.</em></p>
+            <a href="img/OPC_CA_2018.1.pdf" class="btn btn-secondary" download>Download PDF</a>
+            <button type="submit" class="btn btn-primary" id="submitButton" disabled>Submit Agreement</button>
+        </div>
+        </div>
+    </form>
+
+    <div style="padding-top: 4em;"></div>
+    
+    </div>
+    </div>
+{% endblock %}
