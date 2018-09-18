@@ -88,6 +88,12 @@ class DTOPC(object):
         template = env.get_template('logout.html.j2')
         return template.render(ref_id=None)
 
+    @cherrypy.expose
+    def error_404(self):
+        template = env.get_template('404.html.j2')
+        return template.render()
+        
+
 
 
 @cherrypy.expose
@@ -155,7 +161,9 @@ class ReviewSaverService(object):
             response = {'Error': e.args[0]}
             return response
         
-
+def error404(status, message, traceback, version):
+    template = env.get_template('404.html.j2')
+    return template.render()
 
 if __name__ == '__main__':
     conf = {
@@ -164,6 +172,9 @@ if __name__ == '__main__':
             'server.socket_host' : '0.0.0.0',
             'server.socket_port' : 8081,
             'server.thread_pool' : 8
+        },
+        '/': {
+            'error_page.404': error404 # nicer error msg for undefined routes
         },
         '/save_review': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
