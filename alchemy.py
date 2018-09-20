@@ -22,6 +22,7 @@ class Referee(Base):
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
     feedback = Column(Text, default='')
+    finalized_submission = Column(Boolean, default=False)
 
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
