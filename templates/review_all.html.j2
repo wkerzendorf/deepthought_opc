@@ -177,11 +177,11 @@ function submitReview(reviewID) {
         data: JSON.stringify(review),
         success: function(response) {
             refillSubmittedReview(response);
-            proposalID = response.review.proposal_id; // todo: use review.proposal.eso_id
+            proposalEsoId = response.review.proposal_eso_id;
             updateSavedBadge(reviewID);
     
             $('#errorAlert'+reviewID).slideUp();
-            $('#successAlert'+reviewID).html('Review for '+proposalID+' saved successfully.');
+            $('#successAlert'+reviewID).html('Review for '+proposalEsoId+' saved successfully.');
             $('#successAlert'+reviewID).slideDown();  
             $('#saveButton'+reviewID).addClass('btn-success');
             $('#saveButton'+reviewID).removeClass('btn-primary');
@@ -266,6 +266,9 @@ $(document).ready(function () {
 
 {% block styles %}
 <style>
+dd {
+    margin-bottom: 0em;
+}
 .scoreInfo {
     font-style: italic;
     font-size: .9em;
@@ -278,19 +281,31 @@ $(document).ready(function () {
         <div class="col-10 offset-md-1">
             <div style="padding-top: 2em;"></div>
 
-            {# <div class="card"> #}
-            {# <div class="card-body"> #}
-            <p style="padding-bottom: 1em;">Thank you for participating. You must give a score, comments, and expertise rating for each proposal for the review to be considered complete. (In case you have a conflict, check one or both of the boxes provided. You may leave the other fields empty.) You may save a review before completing it; you may also edit a completed review. Once you have completed all reviews, please provide feedback in the bottom text box and click the &ldquo;Submit All Reviews&rdquo; button. Once you have made this submission, the reviews may no longer be edited.
-{#             
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus a libero purus. Vivamus sed dictum erat, sit amet iaculis elit. Nam magna ex, volutpat at sagittis nec, vehicula quis magna. Mauris facilisis consectetur feugiat. Nullam malesuada rhoncus lacinia. Praesent maximus auctor velit, ornare maximus sem. Curabitur cursus vestibulum scelerisque. Sed vestibulum dui sed vestibulum mollis. Duis vitae blandit quam. Aliquam eget leo vel ante elementum finibus at volutpat enim. Praesent mattis dictum felis nec malesuada. Nam a ligula et leo malesuada vehicula.#}
-            </p>
-            {# </div> #}
-            {# </div> #}
+            
+            <p style="padding-bottom: 1em;">Thank you for participating.</p>
+            <h2>Instructions</h2>
+            <p>For each review, you must give (1) a score, (2) comments, and (3) an expertise rating for the review to be considered complete. (In case you have a conflict, select your reason from the dropdown. You may leave the other fields empty.)</p>
+            <p>You may save a review before completing it; you may also edit a completed review. Once you have completed all reviews, please provide feedback in the bottom text box and click the &ldquo;Submit All Reviews&rdquo; button. Once you have made this submission, the reviews may no longer be edited.</p>
+            <p>Although the information you submit is confidential, please note that your comments will be sent&mdash;anonymously but unfiltered&mdash;to the PI as feedback for their proposal.</p>
+
 
             <div class="card">
             <div class="card-header">Grading Scale</div>
             <div class="card-body">
             <dl class="row">
+            <p>The following questions should be considered for the grading:
+            <ul>
+            <li>Is there sufficient background/context for the non-expert (i.e., someone not specialized in this particular sub-field)?</li>
+            <li>Are previous results (either by proposers themselves or in the published literature) clearly presented?</li>
+            <li>Are the proposed observations and the Immediate Objectives pertinent to the background description?</li>
+            <li>Is the sample selection clearly described, or, if a single target, is its choice justified?</li>
+            <li>Are the instrument modes, and target location(s) (e.g., cosmology fields) specified clearly?</li>
+            <li>Will the proposed observations add significantly to the knowledge of this particular field?</li>
+            </ul>
+            </p>
+
+            <p>The full grade scale should be used so as to ensure that the resulting ranking of the proposals is as meaningful as possible. Grades assigned by individual referees can and should be specified with one decimal digit (e.g. 2.7).</p>
+
             <dt class="col-sm-1">1.0</dt>
             <dd class="col-sm-11">outstanding: breakthrough science</dt>
             <dt class="col-sm-1">1.5</dt>
@@ -310,18 +325,7 @@ $(document).ready(function () {
             <dt class="col-sm-1">5.0</dt>
             <dd class="col-sm-11">rejected</dt>
             </dl>
-
-            <p>The full grade scale should be used so as to ensure that the resulting ranking of the proposals is as meaningful as possible. Grades assigned by individual referees can and should be specified with one decimal digit (e.g. 2.7).</p>
-            <p>The following questions should be considered for the grading:
-            <ul>
-            <li>Is there sufficient background/context for the non-expert (i.e., someone not specialized in this particular sub-field)?</li>
-            <li>Are previous results (either by proposers themselves or in the published literature) clearly presented?</li>
-            <li>Are the proposed observations and the Immediate Objectives pertinent to the background description?</li>
-            <li>Is the sample selection clearly described, or, if a single target, is its choice justified?</li>
-            <li>Are the instrument modes, and target location(s) (e.g., cosmology fields) specified clearly?</li>
-            <li>Will the proposed observations add significantly to the knowledge of this particular field?</li>
-            </ul>
-            </p>
+            
             </div>
             </div>
 
@@ -441,7 +445,7 @@ $(document).ready(function () {
             </div> {# /proposalsAccordion #}
 
             <div class="form-group">
-            <h3 style="padding-top: 2em;"><label for="referee_comments">Your feedback:</label></h3>
+            <h3 style="padding-top: 2em;"><label for="referee_comments">Your feedback for us:</label></h3>
             <textarea class="form-control" id="referee_comments" name="referee_comments"></textarea>
             </div>
 

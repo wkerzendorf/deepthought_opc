@@ -10,10 +10,24 @@
 
     <div style="padding-top: 3em;"></div>
     
-    <h2>Available referee ids</h2>
-    {% for id in id_list %}
-    <a href="javascript:" onclick="$('#idInput').val('{{ id }}');"><span class="badge badge-light">{{ id }}</span></a>
+    <h2>Available referees</h2>
+    <p>Color-coding: <span class="badge badge-secondary">Hasn't accepted TOU</span>
+    <span class="badge badge-light">Has accepted TOU; some work done</span>
+    <span class="badge badge-dark">All reviews complete (but referee not finished)</span>
+    <span class="badge badge-success">Referee finished</span></p>
+    <p>
+    {% for referee in available_referees %}
+    <a href="javascript:" onclick="$('#idInput').val('{{ referee.uuid }}');"><span class="badge 
+    {% if referee.completed_all_reviews() %}
+        badge-dark
+    {% elif referee.accepted_tou %}
+        badge-light
+    {% else %}
+        badge-secondary
+    {% endif %}
+    ">{{ referee.uuid }}</span></a>
     {% endfor %}
+    </p>
     
     </div>
     </div>

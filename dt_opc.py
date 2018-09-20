@@ -47,11 +47,11 @@ class DTOPC(object):
         cherrypy.session.load()
         if cherrypy.session.get('ref_id', None) is not None:
             raise cherrypy.HTTPRedirect("/display")
-        available_referees = [item[0] for item in self.db.query(Referee.uuid).all()]
+        available_referees = self.db.query(Referee).all()
         
         template = env.get_template('index.html.j2')
 
-        return template.render(ref_id=None, some_id=available_referees[3], id_list=available_referees)
+        return template.render(ref_id=None, some_id=available_referees[3].uuid, available_referees=available_referees)
 
     @cherrypy.expose
     def login(self, ref_id=None):
@@ -213,6 +213,10 @@ if __name__ == '__main__':
         '/js' : {
             'tools.staticdir.on'  : True,
             'tools.staticdir.dir' : os.path.join(path, 'js')
+        },
+        '/pdf' : {
+            'tools.staticdir.on'  : True,
+            'tools.staticdir.dir' : os.path.join(path, 'pdf')
         },
 
 

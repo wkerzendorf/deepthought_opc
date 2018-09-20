@@ -25,6 +25,9 @@ class Referee(Base):
 
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
+    
+    def completed_all_reviews(self):
+        return all([review.is_complete() for review in self.reviews])
 
 class Proposal(Base):
     __tablename__  = 'proposals'
