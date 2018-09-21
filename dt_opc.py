@@ -86,12 +86,14 @@ class DTOPC(object):
         raise cherrypy.HTTPRedirect("/display")
 
     @cherrypy.expose
-    def display(self):
+    def display(self, error=None):
         self.logged_out_redirect()
         ref_id = cherrypy.session['ref_id']
         referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-        if not referee.accepted_tou:
+        if not referee.accepted_tou: # must agree
             raise cherrypy.HTTPRedirect("/agreement")
+        if referee.finalized_submission: # if they've finished, they can't see proposals/reviews anymore
+            raise cherrypy.HTTPRedirect("/complete")
 
         id_and_password = ref_id+':'+ref_id
         user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
@@ -99,7 +101,35 @@ class DTOPC(object):
         template = env.get_template('review_all.html.j2')
         all_complete = all([review.is_complete() for review in reviews])
 
-        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete)
+        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete, error=error)
+    
+    @cherrypy.expose
+    def finalize(self, feedback):
+        self.logged_out_redirect()
+        ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        if not referee.accepted_tou:
+            raise cherrypy.HTTPRedirect("/agreement")
+        if not referee.completed_all_reviews():
+            raise cherrypy.HTTPRedirect("/display")
+        
+        referee.feedback = feedback
+        referee.finalized_submission = True
+        self.db.commit()
+
+        raise cherrypy.HTTPRedirect("/complete")
+    
+    # route for after "submit all" has been pressed, or finalized referees logging back in:
+    @cherrypy.expose
+    def complete(self):
+        self.logged_out_redirect()
+        ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        if not referee.finalized_submission:
+            raise cherrypy.HTTPRedirect("/display")
+        template = env.get_template('complete.html.j2')
+        return template.render(ref_id=ref_id)
+
     
     @cherrypy.expose
     def logout(self):
