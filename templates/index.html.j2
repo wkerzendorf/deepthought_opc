@@ -14,7 +14,7 @@
     <p>Color-coding: <span class="badge badge-light">Hasn't accepted TOU</span>
     <span class="badge badge-secondary">Has accepted TOU; some work done</span>
     <span class="badge badge-dark">All reviews complete (but not finalised)</span>
-    <span class="badge badge-success">Referee finished</span></p>
+    <span class="badge badge-success">Referee's reviews finalised</span></p>
     <p>
     {% for referee in available_referees %}
     <a href="javascript:" onclick="$('#idInput').val('{{ referee.uuid }}');"><span class="badge 

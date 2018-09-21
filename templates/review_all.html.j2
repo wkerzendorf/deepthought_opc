@@ -304,8 +304,8 @@ dd {
             <p style="padding-bottom: 1em;">Thank you for participating.</p>
             <h2>Instructions</h2>
             <p>For each review, you must give (1) a score, (2) comments, and (3) an expertise rating for the review to be considered complete. (In case you have a conflict, select your reason from the dropdown. You may leave the other fields empty.)</p>
-            <p>You may save a review before completing it; you may also edit a completed review. Once you have completed all reviews, please provide feedback in the bottom text box and click the &ldquo;Finalize All Reviews&rdquo; button. Once you have made this submission, the reviews may no longer be edited.</p>
-            <p>Although the information you submit is confidential, please note that your comments will be sent&mdash;anonymously but unfiltered&mdash;to the PI as feedback for their proposal.</p>
+            <p>You may save a review before completing it; you may also edit a completed review. Once you have completed all reviews, please provide any feedback you may have for us in the bottom text box and click the &ldquo;Finalise All Reviews&rdquo; button. Once you have made this submission, the reviews may no longer be edited.</p>
+            <p>Although the information you submit is confidential, please note that your comments will be sent&mdash;anonymously but unfiltered(!)&mdash;to the PI as feedback for their proposal. Consequently, you will receive feedback from eight reviewers on your proposal. We kindly ask you to be considerate and constructive in your comments.</p>
 
 
             <div class="card">
@@ -428,7 +428,7 @@ dd {
                     
                     <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
                     <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
-                    <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated }}{% endif %}">
+                    <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated.strftime('%d %b %H:%M:%S') }}{% endif %}">
                     <input type="hidden" id="is_complete{{ review.id }}" class="is_complete" name="is_complete{{ review.id }}" value="{{ review|is_complete }}">
 
                     <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">
