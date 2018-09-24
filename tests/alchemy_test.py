@@ -139,7 +139,7 @@ class ReviewTest(unittest.TestCase):
         review.conflicted = 0
         review.last_updated = datetime(2018, 9, 1, 12, 0, 0, 0)
 
-        expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'comment': 'Lorem ipsum dolor sit amet.', 'ref_knowledge': 2, 'score': 1.7, 'conflicted': 0, 'last_updated': '2018-09-01 12:00:00'}
+        expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'comment': 'Lorem ipsum dolor sit amet.', 'ref_knowledge': 2, 'score': 1.7, 'conflicted': 0, 'last_updated': 1535803200.0}
         self.assertEqual(expected, review.to_json())
 
 

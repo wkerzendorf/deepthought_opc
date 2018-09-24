@@ -2,6 +2,8 @@
 
 {% block scripts %}
 <script>
+monthMap = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
 function conflictExists(reviewID) {
     return $('#conflicted'+reviewID).val() != 0;
 }
@@ -79,8 +81,12 @@ function updateExpertiseBadge(reviewID) {
 
 function updateSavedBadge(reviewID, lastUpdated, isComplete) {
     badgeID = 'badgeSaved'+reviewID;
-    if (lastUpdated == undefined) {
+    if (lastUpdated == undefined) { // get from DOM
         lastUpdated = $('#last_updated'+reviewID).val();
+        if (lastUpdated != '') {
+            d = new Date(lastUpdated * 1000);
+            lastUpdated = d.getDate()+' '+monthMap[d.getMonth()]+' '+d.getHours().toString().padStart(2, '0')+':'+d.getMinutes().toString().padStart(2, '0')+':'+d.getSeconds().toString().padStart(2, '0');
+        }
     }
     if (isComplete == undefined) {
         isComplete = ["true", "True", true].includes($('#is_complete'+reviewID).val());
@@ -428,7 +434,7 @@ dd {
                     
                     <input type="hidden" id="referee_id{{ review.id }}" name="referee_id{{ review.id }}" value="{{ review.referee_id }}">
                     <input type="hidden" id="proposal_id{{ review.id }}" name="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
-                    <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated.strftime('%d %b %H:%M:%S') }}{% endif %}">
+                    <input type="hidden" id="last_updated{{ review.id }}" name="last_updated{{ review.id }}" value="{% if review.last_updated != None %}{{ review.last_updated.timestamp() }}{% endif %}">
                     <input type="hidden" id="is_complete{{ review.id }}" class="is_complete" name="is_complete{{ review.id }}" value="{{ review|is_complete }}">
 
                     <div class="alert alert-danger" id="errorAlert{{ review.id }}" style="display: none;">

@@ -94,7 +94,8 @@ class Review(Base):
             review_json[prop] = getattr(self, prop)
         if self.proposal != None: # only works if review was fetched from DB
             review_json['proposal_eso_id'] = self.proposal.eso_id
-        review_json['last_updated'] = self.last_updated.isoformat(' ')
+        # review_json['last_updated'] = self.last_updated.isoformat(' ')
+        review_json['last_updated'] = self.last_updated.timestamp() # POSIX timestamp; javascript will convert
         
         return review_json
 

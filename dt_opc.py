@@ -6,6 +6,7 @@ from alchemy import Referee, Base, Proposal, Review
 import cherrypy
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
+import datetime
 from jinja2 import Environment, FileSystemLoader
 
 import base64
@@ -101,7 +102,7 @@ class DTOPC(object):
         template = env.get_template('review_all.html.j2')
         all_complete = all([review.is_complete() for review in reviews])
 
-        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete, error=error)
+        return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete, tz=datetime.timezone.utc, error=error)
     
     @cherrypy.expose
     def finalize(self, feedback):
