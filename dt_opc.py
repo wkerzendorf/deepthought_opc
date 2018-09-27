@@ -10,6 +10,7 @@ import datetime
 from jinja2 import Environment, FileSystemLoader
 
 import base64
+import json
 
 path = os.path.abspath(os.path.dirname(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(path, 'templates')))
@@ -249,12 +250,17 @@ if __name__ == '__main__':
             'tools.staticdir.on'  : True,
             'tools.staticdir.dir' : os.path.join(path, 'pdf')
         },
-
-
     }
+    
+    with open('credentials.json') as f:
+        credentials = json.load(f)
+    env = credentials['env'] # development = sqlite; production = mysql
+    dsn = credentials[env]['writer'] # in the format <engine>://<connection_string>
+
     cherrypy.tools.db = SQLAlchemyTool()
 
-    sqlalchemy_plugin = SQLAlchemyPlugin(cherrypy.engine, Base, 'sqlite:///dt_opc_test.db')
+    # sqlalchemy_plugin = SQLAlchemyPlugin(cherrypy.engine, Base, 'sqlite:///dt_opc_test.db')
+    sqlalchemy_plugin = SQLAlchemyPlugin(cherrypy.engine, Base, dsn)
     sqlalchemy_plugin.subscribe()
     sqlalchemy_plugin.create()
     webapp = DTOPC()
