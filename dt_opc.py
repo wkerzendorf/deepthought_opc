@@ -254,8 +254,8 @@ if __name__ == '__main__':
     
     with open('credentials.json') as f:
         credentials = json.load(f)
-    env = credentials['env'] # development = sqlite; production = mysql
-    dsn = credentials[env]['writer'] # in the format <engine>://<connection_string>
+    runEnv = credentials['env'] # development = sqlite; production = mysql
+    dsn = credentials[runEnv]['writer'] # in the format <engine>://<connection_string>
 
     cherrypy.tools.db = SQLAlchemyTool()
 
