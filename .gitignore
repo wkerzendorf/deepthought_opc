@@ -107,3 +107,4 @@ venv.bak/
 dt_opc_test.db
 dt_opc_test.db.bak
 credentials.json
+/proposals/*.pdf

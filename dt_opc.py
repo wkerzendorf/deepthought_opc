@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 from alchemy import Referee, Base, Proposal, Review
 import cherrypy
+from cherrypy.lib.static import serve_file
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
 import datetime
@@ -106,6 +107,18 @@ class DTOPC(object):
         return template.render(ref_id=ref_id, user_token=user_token, reviews=reviews, all_complete=all_complete, tz=datetime.timezone.utc, error=error)
     
     @cherrypy.expose
+    def get_pdf(self, proposal):
+        self.logged_out_redirect()
+        ref_id = cherrypy.session['ref_id']
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        referee_proposal_ids = [prop.eso_id for prop in referee.proposals]
+        if proposal in referee_proposal_ids:
+            pdf_filename = os.path.abspath('proposals/'+proposal+'.pdf')
+        else:
+            pdf_filename = os.path.abspath('pdf/403.pdf')
+        return serve_file(pdf_filename, content_type='application/pdf', disposition='attachment')
+
+    @cherrypy.expose
     def finalize(self, feedback):
         self.logged_out_redirect()
         ref_id = cherrypy.session['ref_id']
@@ -170,7 +183,7 @@ class ReviewSaverService(object):
         token = base64.b64decode(token).decode('ascii')
         expected_token = cherrypy.session['ref_id']+":"+cherrypy.session['ref_id']
         if expected_token != token:
-            cherrypy.response.status = 401
+            cherrypy.response.status = 403
             response = {'Error': 'Submitted user token does not match session user.'}
             return response 
         
@@ -196,7 +209,7 @@ class ReviewSaverService(object):
             self.db.rollback()
             reason = e.args[0]
             unauthorized_reasons = ['Review does not belong to this referee.', 'Referee has not accepted the confidentiality terms.']
-            cherrypy.response.status = 401 if reason in unauthorized_reasons else 422
+            cherrypy.response.status = 403 if reason in unauthorized_reasons else 422
             response = {'Error': reason}
             return response
 
