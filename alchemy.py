@@ -13,7 +13,7 @@ class Referee(Base):
     # Here we define columns for the table person
     # Notice that each column is also a normal Python instance attribute.
     id = Column(Integer, primary_key=True)
-    uuid = Column(String(100), nullable=False)
+    uuid = Column(String(length=100), nullable=False)
     accepted_tou = Column(Boolean, default=False)
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
@@ -34,9 +34,9 @@ class Proposal(Base):
     __tablename__  = 'proposals'
 
     id = Column(Integer, primary_key=True)
-    eso_id = Column(String(10)) # such as 103.x-0123
-    title = Column(String)
-    abstract = Column(String) 
+    eso_id = Column(String(length=10)) # such as 103.x-0123
+    title = Column(String(length=256))
+    abstract = Column(Text()) 
 
     def __repr__(self):
         return "<Proposal {0} Title: {1}>".format(self.eso_id, self.title)
