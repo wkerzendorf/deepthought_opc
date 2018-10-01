@@ -108,15 +108,22 @@ class DTOPC(object):
     
     @cherrypy.expose
     def get_pdf(self, proposal):
+        # careful testing this part, firefox seems to cache download files (even if you cancel out of them)
         self.logged_out_redirect()
         ref_id = cherrypy.session['ref_id']
         referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
+        forbidden_filename = os.path.abspath('pdf/403.pdf')
+        if not referee.accepted_tou or referee.finalized_submission:
+            # cherrypy.log('not accepted_tou or finalized submission')
+            return serve_file(forbidden_filename, content_type='application/pdf', disposition='attachment')
+
         referee_proposal_ids = [prop.eso_id for prop in referee.proposals]
+        # cherrypy.log(', '.join(referee_proposal_ids))
         if proposal in referee_proposal_ids:
             pdf_filename = os.path.abspath('proposals/'+proposal+'.pdf')
+            return serve_file(pdf_filename, content_type='application/pdf', disposition='attachment')
         else:
-            pdf_filename = os.path.abspath('pdf/403.pdf')
-        return serve_file(pdf_filename, content_type='application/pdf', disposition='attachment')
+            return serve_file(forbidden_filename, content_type='application/pdf', disposition='attachment')
 
     @cherrypy.expose
     def finalize(self, feedback):
