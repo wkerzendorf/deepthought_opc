@@ -270,6 +270,10 @@ if __name__ == '__main__':
             'tools.staticdir.on'  : True,
             'tools.staticdir.dir' : os.path.join(path, 'pdf')
         },
+        '/favicon.ico' : {
+            'tools.staticfile.on'  : True,
+            'tools.staticfile.filename' : os.path.join(path, 'favicon.ico')
+        }
     }
     
     with open('credentials.json') as f:
