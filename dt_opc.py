@@ -54,7 +54,7 @@ class DTOPC(object):
         
         template = env.get_template('index.html.j2')
 
-        return template.render(ref_id=None, some_id=available_referees[3].uuid, available_referees=available_referees)
+        return template.render(ref_id=None, some_id="Your DPR ID", available_referees=[])
 
     @cherrypy.expose
     def login(self, ref_id=None):
