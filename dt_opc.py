@@ -120,7 +120,7 @@ class DTOPC(object):
         referee_proposal_ids = [prop.eso_id for prop in referee.proposals]
         # cherrypy.log(', '.join(referee_proposal_ids))
         if proposal in referee_proposal_ids:
-            pdf_filename = os.path.abspath('proposals/'+proposal+'.pdf')
+            pdf_filename = os.path.abspath('p103_proposals/'+proposal+'.pdf')
             return serve_file(pdf_filename, content_type='application/pdf', disposition='attachment')
         else:
             return serve_file(forbidden_filename, content_type='application/pdf', disposition='attachment')
