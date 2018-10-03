@@ -34,7 +34,7 @@ class Proposal(Base):
     __tablename__  = 'proposals'
 
     id = Column(Integer, primary_key=True)
-    eso_id = Column(String(length=10)) # such as 103.x-0123
+    eso_id = Column(String(length=20)) # such as 103.x-0123
     title = Column(String(length=256))
     abstract = Column(Text()) 
 
