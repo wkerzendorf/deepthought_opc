@@ -63,7 +63,8 @@ class DTOPC(object):
                 raise cherrypy.HTTPRedirect("/display")
             else:
                 raise cherrypy.HTTPRedirect("/")
-                
+        
+        ref_id = ref_id.strip()
         referee = self.db.query(Referee).filter_by(uuid=ref_id).one_or_none()
         if referee is None:
             return self.index(error="Invalid ID. Please check for typographical mistakes and try again. Note that IDs are case sensitive.")
