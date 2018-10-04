@@ -369,7 +369,7 @@ dd {
                     <div class="row">
                     <div class="col-12">
                     <h5 class="mb-0" style="display: inline-block;">
-                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse{{ review.id }}" aria-expanded="true" aria-controls="collapse{{ review.id }}">
+                    <button class="btn btn-link reviewTitle" type="button" data-toggle="collapse" data-target="#collapse{{ review.id }}" aria-expanded="true" aria-controls="collapse{{ review.id }}">
                         {{ review.proposal.eso_id }}: {{ review.proposal.title }}
                     </button>
                     </h5>
@@ -418,6 +418,7 @@ dd {
                     <div class="form-group">
                         <label for="comment{{ review.id }}">Comments</label>
                         <textarea class="form-control reviewInput{{ review.id }}" id="comment{{ review.id }}" name="comment{{ review.id }}" rows="3" onchange="updateCommentsBadge({{ review.id }});" onkeyup="updateCommentsBadge({{ review.id }});">{% if review.comment != None %}{{ review.comment }}{% endif %}</textarea>
+                        <small class="form-text text-muted">Constructive feedback for PI. Please be courteous&mdash;comments will be submitted anonymously but unfiltered.</small>
                     </div>
 
                     <div class="form-group">

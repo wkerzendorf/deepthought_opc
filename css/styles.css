@@ -6,3 +6,8 @@
 #headerText {
     display: inline-block;
 }
+
+.reviewTitle {
+    white-space: normal;
+    text-align: left;
+}
