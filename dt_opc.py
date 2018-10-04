@@ -244,11 +244,15 @@ def error404(status, message, traceback, version):
     return template.render()
 
 if __name__ == '__main__':
+    with open('credentials.json') as f:
+        credentials = json.load(f)
+    run_env = credentials['env'] # test = sqlite; development + production = mysql
+
     conf = {
         'global' : {
             'tools.proxy.on':True,
             'server.socket_host' : '0.0.0.0',
-            'server.socket_port' : 8081,
+            'server.socket_port' : credentials[run_env]['cherrypy_port'],
             'server.thread_pool' : 8
         },
         '/': {
@@ -281,10 +285,7 @@ if __name__ == '__main__':
         }
     }
     
-    with open('credentials.json') as f:
-        credentials = json.load(f)
-    runEnv = credentials['env'] # test = sqlite; development + production = mysql
-    dsn = credentials[runEnv]['writer'] # in the format <engine>://<connection_string>
+    dsn = credentials[run_env]['writer'] # in the format <engine>://<connection_string>
 
     cherrypy.tools.db = SQLAlchemyTool()
 
