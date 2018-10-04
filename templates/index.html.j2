@@ -3,13 +3,19 @@
 {% block content %}
     <div class="row">
     <div class="col-12">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <form method="post" action="login" class="form-inline">
-        <input type="text" id="idInput" class="form-control" value="{{ some_id }}" name="ref_id">
-        <button type="submit" class="btn btn-primary ml-3">Give it now!</button>
+        <input type="text" id="idInput" class="form-control" name="ref_id" placeholder="Your DPR ID">
+        <button type="submit" class="btn btn-primary ml-3">Login</button>
     </form>
 
     <div style="padding-top: 3em;"></div>
-    <!--
+    {#
     <h2>Available referees</h2>
     <p>Color-coding: <span class="badge badge-light">Hasn't accepted TOU</span>
     <span class="badge badge-secondary">Has accepted TOU; some work done</span>
@@ -30,7 +36,7 @@
     ">{{ referee.uuid }}</span></a>
     {% endfor %}
     </p>
-    -->
+    #}
     
     </div>
     </div>

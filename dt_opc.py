@@ -46,7 +46,7 @@ class DTOPC(object):
             raise cherrypy.HTTPRedirect("/")
 
     @cherrypy.expose
-    def index(self):
+    def index(self, error=None):
         cherrypy.session.load()
         if cherrypy.session.get('ref_id', None) is not None:
             raise cherrypy.HTTPRedirect("/display")
@@ -54,7 +54,7 @@ class DTOPC(object):
         
         template = env.get_template('index.html.j2')
 
-        return template.render(ref_id=None, some_id="Your DPR ID", available_referees=[])
+        return template.render(ref_id=None, error=error, available_referees=[])
 
     @cherrypy.expose
     def login(self, ref_id=None):
@@ -63,6 +63,10 @@ class DTOPC(object):
                 raise cherrypy.HTTPRedirect("/display")
             else:
                 raise cherrypy.HTTPRedirect("/")
+                
+        referee = self.db.query(Referee).filter_by(uuid=ref_id).one_or_none()
+        if referee is None:
+            return self.index(error="Invalid ID. Please check for typographical mistakes and try again. Note that IDs are case sensitive.")
         cherrypy.session['ref_id'] = ref_id
         raise cherrypy.HTTPRedirect("/display")
 
