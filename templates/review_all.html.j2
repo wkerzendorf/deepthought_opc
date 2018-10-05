@@ -398,7 +398,7 @@ dd {
                         <label for="conflicted{{ review.id }}">Do you have a conflict that prevents you from referreeing this proposal?</label>
                         <select class="form-control" id="conflicted{{ review.id }}" name="conflicted{{ review.id }}" onchange="toggleConflictOverride({{ review.id }});">
                             <option value="0">No, I do not have a conflict.</option>
-                            <option value="1" {% if review.conflicted == 1 %}selected{% endif %}>Yes, I have a close personal or professional relationship with the PI.</option>
+                            <option value="1" {% if review.conflicted == 1 %}selected{% endif %}>Yes, I have a close personal or professional relationship with the PI and/or team.</option>
                             <option value="2" {% if review.conflicted == 2 %}selected{% endif %}>Yes, I am a direct competitor to this proposal.</option>
                         </select>
                     </div>
