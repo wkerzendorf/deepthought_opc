@@ -41,6 +41,8 @@ class Proposal(Base):
     def __repr__(self):
         return "<Proposal {0} Title: {1}>".format(self.eso_id, self.title)
 
+
+
 class Review(Base):
     __tablename__ = 'reviews'
 
@@ -127,3 +129,11 @@ class Review(Base):
 
 
     
+class ReviewRating(Base):
+    __tablename__ = 'review_rating'
+
+    id = Column(Integer, primary_key=True)
+    referee_id = Column(Integer, ForeignKey('referees.id'))
+    proposal_id = Column(Integer, ForeignKey('proposals.id'))
+    review_rating = Column(Integer)
+
