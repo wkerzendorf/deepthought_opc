@@ -132,8 +132,42 @@ class Review(Base):
 class ReviewRating(Base):
     __tablename__ = 'review_rating'
 
+    MIN_RATING = 1
+    MAX_RATING = 4
+
     id = Column(Integer, primary_key=True)
     referee_id = Column(Integer, ForeignKey('referees.id'))
     proposal_id = Column(Integer, ForeignKey('proposals.id'))
     review_rating = Column(Integer)
+
+    def is_valid(self):
+        rating_is_valid = isinstance(self.review_rating, int) and self.review_rating >= self.MIN_RATING and self.review_rating <= self.MAX_RATING
+        rating_is_valid = rating_is_valid or self.review_rating == None # an empty review rating is OK; it means the PI changed their mind
+        return isinstance(self.referee_id, int) and isinstance(self.proposal_id, int) and rating_is_valid
+    
+    def create_from_json(self, json):
+        properties = ['referee_id', 'proposal_id', 'review_rating']
+        for prop in properties:
+            if prop not in json: 
+                raise TypeError('JSON missing one or more required properties.')
+
+            value = int(json[prop])
+            if prop == 'review_rating' and value == 0:
+                value = None
+
+            setattr(self, prop, value)
+
+    def update_from_json(self, json):
+        rating = int(json['review_rating'])
+        self.review_rating = rating if rating > 0 else None;
+    
+    def to_json(self):
+        rating_json = {}
+        properties = ['id', 'referee_id', 'proposal_id', 'review_rating']
+        for prop in properties: 
+            rating_json[prop] = getattr(self, prop)
+        if self.review_rating == None:
+            rating_json['review_rating'] = 0
+        
+        return rating_json
 

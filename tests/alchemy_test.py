@@ -5,7 +5,7 @@ import copy
 from datetime import datetime
 
 from alchemy import (
-    Review
+    Review, ReviewRating
 )
 
 class ReviewTest(unittest.TestCase):
@@ -141,6 +141,96 @@ class ReviewTest(unittest.TestCase):
 
         expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'comment': 'Lorem ipsum dolor sit amet.', 'ref_knowledge': 2, 'score': 1.7, 'conflicted': 0, 'last_updated': 1535803200.0}
         self.assertEqual(expected, review.to_json())
+
+
+class ReviewRatingTest(unittest.TestCase):
+    def test_is_valid(self):
+        good_review_rating = ReviewRating()
+        good_review_rating.referee_id = 2
+        good_review_rating.proposal_id = 13
+        good_review_rating.review_rating = 2
+        self.assertTrue(good_review_rating.is_valid())
+
+        empty_rating = copy.copy(good_review_rating)
+        empty_rating.review_rating = None
+        self.assertTrue(empty_rating.is_valid())
+
+        too_low = copy.copy(good_review_rating)
+        too_low.review_rating = 0
+        self.assertFalse(too_low.is_valid())
+
+        too_high = copy.copy(good_review_rating)
+        too_high.review_rating = 5
+        self.assertFalse(too_high.is_valid())
+
+        missing_ref_id = copy.copy(good_review_rating)
+        missing_ref_id.referee_id = None
+        self.assertFalse(missing_ref_id.is_valid())
+
+        missing_proposal_id = copy.copy(good_review_rating)
+        missing_proposal_id.proposal_id = None
+        self.assertFalse(missing_proposal_id.is_valid())
+    
+
+    def test_update_from_json(self):
+        rating = ReviewRating()
+        rating.id = 7
+        rating.referee_id = 55
+        rating.proposal_id = 99
+        rating.review_rating = 1
+
+        # assume JSON has quoted values, which need to be cast:
+        json = {'referee_id': '55', 'proposal_id': '99', 'review_rating': '3'}
+        
+        rating.update_from_json(json)
+        
+        self.assertEqual(7, rating.id)
+        self.assertEqual(55, rating.referee_id)
+        self.assertEqual(99, rating.proposal_id)
+        self.assertEqual(3, rating.review_rating)
+
+
+        json = {'referee_id': '55', 'proposal_id': '99', 'review_rating': '0'}
+        rating.update_from_json(json)
+        self.assertEqual(None, rating.review_rating)
+    
+
+    def test_create_from_json(self):
+        rating = ReviewRating()
+
+        json = {'referee_id': '55', 'proposal_id': '99', 'review_rating': '3'}
+        
+        rating.create_from_json(json)
+        
+        self.assertEqual(55, rating.referee_id)
+        self.assertEqual(99, rating.proposal_id)
+        self.assertEqual(3, rating.review_rating)
+
+
+        rating = ReviewRating()
+
+        json = {'referee_id': '55', 'proposal_id': '99', 'review_rating': '0'}
+        
+        rating.create_from_json(json)
+        
+        self.assertEqual(55, rating.referee_id)
+        self.assertEqual(99, rating.proposal_id)
+        self.assertEqual(None, rating.review_rating)
+    
+    def test_to_json(self):
+        rating = ReviewRating()
+        rating.id = 7
+        rating.referee_id = 55
+        rating.proposal_id = 99
+        rating.review_rating = 1
+
+        expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'review_rating': 1}
+        self.assertEqual(expected, rating.to_json())
+
+        rating.review_rating = None
+
+        expected = {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'review_rating': 0}
+        self.assertEqual(expected, rating.to_json())
 
 
 if __name__ == '__main__':

@@ -71,37 +71,11 @@ class DTOPC(object):
         cherrypy.session['ref_id'] = ref_id
         raise cherrypy.HTTPRedirect("/show_reviews_for_pi")
 
-    # @cherrypy.expose
-    # def agreement(self): # display the agreement text and form
-    #     self.logged_out_redirect()
-    #     ref_id = cherrypy.session['ref_id']
-    #     referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-    #     if referee.accepted_tou: # no need to agree if already done
-    #         raise cherrypy.HTTPRedirect("/show_reviews_for_pi")
-    #     template = env.get_template('agreement.html.j2')
-
-    #     return template.render(ref_id=ref_id)
-    
-    # @cherrypy.expose
-    # def process_agreement(self, agree=None): # record the referee's agreement and redirect to display
-    #     self.logged_out_redirect()
-    #     if agree not in [1, "1"]:
-    #         raise cherrypy.HTTPRedirect("/agreement")
-    #     ref_id = cherrypy.session['ref_id']
-    #     referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-    #     referee.accepted_tou = True
-    #     self.db.commit()
-    #     raise cherrypy.HTTPRedirect("/show_reviews_for_pi")
-
     @cherrypy.expose
     def show_reviews_for_pi(self, error=None):
         self.logged_out_redirect()
         ref_id = cherrypy.session['ref_id']
         referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-        # if not referee.accepted_tou: # must agree
-        #     raise cherrypy.HTTPRedirect("/agreement")
-        # if referee.finalized_submission: # if they've finished, they can't see proposals/reviews anymore
-        #     raise cherrypy.HTTPRedirect("/complete")
 
         id_and_password = ref_id+':'+ref_id
         user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
@@ -116,52 +90,6 @@ class DTOPC(object):
         template = env.get_template('show_reviews_for_pi.html.j2')
 
         return template.render(ref_id=ref_id, user_token=user_token, reviews_for_pi=reviews_for_pi, ratings=ratings)
-    
-    # @cherrypy.expose
-    # def get_pdf(self, proposal):
-    #     # careful testing this part, firefox seems to cache download files (even if you cancel out of them)
-    #     self.logged_out_redirect()
-    #     ref_id = cherrypy.session['ref_id']
-    #     referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-    #     forbidden_filename = os.path.abspath('pdf/403.pdf')
-    #     if not referee.accepted_tou or referee.finalized_submission:
-    #         # cherrypy.log('not accepted_tou or finalized submission')
-    #         return serve_file(forbidden_filename, content_type='application/pdf', disposition='attachment')
-
-    #     referee_proposal_ids = [prop.eso_id for prop in referee.proposals]
-    #     # cherrypy.log(', '.join(referee_proposal_ids))
-    #     if proposal in referee_proposal_ids:
-    #         pdf_filename = os.path.abspath('p103_proposals/'+proposal+'.pdf')
-    #         return serve_file(pdf_filename, content_type='application/pdf', disposition='attachment')
-    #     else:
-    #         return serve_file(forbidden_filename, content_type='application/pdf', disposition='attachment')
-
-    # @cherrypy.expose
-    # def finalize(self, feedback):
-    #     self.logged_out_redirect()
-    #     ref_id = cherrypy.session['ref_id']
-    #     referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-    #     if not referee.accepted_tou:
-    #         raise cherrypy.HTTPRedirect("/agreement")
-    #     if not referee.completed_all_reviews():
-    #         raise cherrypy.HTTPRedirect("/show_reviews_for_pi")
-        
-    #     referee.feedback = feedback
-    #     referee.finalized_submission = True
-    #     self.db.commit()
-
-    #     raise cherrypy.HTTPRedirect("/complete")
-    
-    # route for after "submit all" has been pressed, or finalized referees logging back in:
-    # @cherrypy.expose
-    # def complete(self):
-    #     self.logged_out_redirect()
-    #     ref_id = cherrypy.session['ref_id']
-    #     referee = self.db.query(Referee).filter_by(uuid=ref_id).one()
-    #     if not referee.finalized_submission:
-    #         raise cherrypy.HTTPRedirect("/show_reviews_for_pi")
-    #     template = env.get_template('complete.html.j2')
-    #     return template.render(ref_id=ref_id)
 
     
     @cherrypy.expose
@@ -179,7 +107,7 @@ class DTOPC(object):
 
 
 @cherrypy.expose
-class ReviewSaverService(object):
+class ReviewRatingSaverService(object):
     @property
     def db(self):
         return cherrypy.request.db
@@ -205,19 +133,27 @@ class ReviewSaverService(object):
             response = {'Error': 'Submitted user token does not match session user.'}
             return response 
         
-        submitted_review_json = cherrypy.request.json
+        submitted_json = cherrypy.request.json
+        review_id = submitted_json['review_id']
+        rating_json = submitted_json['review_rating']
         # ensure that submitted review matches db and is valid:
         try:
-            if 'id' not in submitted_review_json:
-                raise TypeError('Review missing id.')
-            review = self.db.query(Review).get(submitted_review_json['id'])
-            review.update_from_json(submitted_review_json)
-            if review.referee.uuid != cherrypy.session['ref_id']:
-                raise ValueError('Review does not belong to this referee.')
-            if not review.referee.accepted_tou:
-                raise ValueError('Referee has not accepted the confidentiality terms.')
-            if not review.is_valid():
-                raise ValueError('Review has one or more invalid values (e.g., score out of range).')
+            # if 'id' not in submitted_review_json:
+            #     raise TypeError('Review missing id.')
+            # review = self.db.query(ReviewRating).get(submitted_review_json['id'])
+            # upset rating; i.e. update existing rating or insert it if it doesn't already exist
+            new_rating = False
+            review_rating = self.db.query(ReviewRating).filter(ReviewRating.proposal_id == rating_json['proposal_id']).filter(ReviewRating.referee_id == rating_json['referee_id']).first()
+            if not review_rating:
+                new_rating = True
+                review_rating = ReviewRating()
+                review_rating.create_from_json(rating_json)
+            else:
+                review_rating.update_from_json(rating_json)
+
+            # TODO ensure that ref_id matches pi of review
+            if not review_rating.is_valid():
+                raise ValueError('Rating is invalid (must be 1-4) and IDs must be filled.')
         except TypeError as e: # raised if JSON is missing an element
             self.db.rollback()
             cherrypy.response.status = 400
@@ -231,13 +167,14 @@ class ReviewSaverService(object):
             response = {'Error': reason}
             return response
 
-
         # save the updated review and return JSON:
         try: 
+            if new_rating:
+                self.db.add(review_rating)
             self.db.commit()
-            review = self.db.query(Review).get(submitted_review_json['id'])
-            saved_json = review.to_json()
-            response = {'review': saved_json, 'is_complete': review.is_complete()}
+            rating = self.db.query(ReviewRating).filter(ReviewRating.proposal_id == rating_json['proposal_id']).filter(ReviewRating.referee_id == rating_json['referee_id']).first()
+            saved_json = rating.to_json()
+            response = {'review_id': review_id, 'review_rating': saved_json}
             return response
         except Exception as e:
             self.db.rollback()
@@ -264,7 +201,7 @@ if __name__ == '__main__':
         '/': {
             'error_page.404': error404 # nicer error msg for undefined routes
         },
-        '/save_review': {
+        '/save_review_rating': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [('Content-Type', 'application/json')]
@@ -300,5 +237,5 @@ if __name__ == '__main__':
     sqlalchemy_plugin.subscribe()
     sqlalchemy_plugin.create()
     webapp = DTOPC()
-    webapp.save_review = ReviewSaverService()
+    webapp.save_review_rating = ReviewRatingSaverService()
     cherrypy.quickstart(webapp, '/', conf)

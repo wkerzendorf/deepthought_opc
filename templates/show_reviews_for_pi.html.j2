@@ -72,89 +72,62 @@ function setButtonStyle(reviewID) {
 
 function clearRating(reviewID) {
     $("input[name=rank"+reviewID+"]:checked").prop("checked", false);
-    setButtonStyle(reviewID);
+    submitReviewRating(reviewID);
     $('.btnLabel'+reviewID).removeClass('active');
     $("#clearButton"+reviewID).addClass("invisible");
 }
 
 function makeJsonOfReviewRating(reviewID) {
-    reviewRating = {"id": reviewID};
-    // TODO: get embedded values and clicked button, make into json for ajax
-    {# review.referee_id = parseInt($('#referee_id'+reviewID).val());
-    review.proposal_id = parseInt($('#proposal_id'+reviewID).val());
+    reviewRating = {};
+    reviewRating.referee_id = parseInt($('#referee_id'+reviewID).val());
+    reviewRating.proposal_id = parseInt($('#proposal_id'+reviewID).val());
+    
+    val = $("input[name=rank"+reviewID+"]:checked").val();
+    ranking = val == undefined ? 0 : parseInt(val);
+    reviewRating.review_rating = ranking;
 
-    review.comment = $('#comment'+reviewID).val();
-    refKnowledge = $('#ref_knowledge'+reviewID).val();
-    score = $('#score'+reviewID).val();
-    review.ref_knowledge = refKnowledge == "" ? "" : parseInt(refKnowledge);
-    review.score = score == "" ? "" : parseFloat(score);
-    review.conflicted = parseInt($('#conflicted'+reviewID).val());
-    review.last_updated = $('#last_updated'+reviewID).val(); #}
-
-    return review;
+    return reviewRating;
 }
 
 var submitReviewRating = function (reviewID) {
-    // TODO: turn reviewRating into json, send via ajax, on success show a check mark and refill buttons; on failure show message
-    {# token = "{{ user_token|string }}";
-    review = makeJsonOfReview(reviewID);
+    token = "{{ user_token|string }}";
+    reviewRating = makeJsonOfReviewRating(reviewID);
+    jsonDoc = {'review_id': reviewID, 'review_rating': reviewRating};
 
-    console.log('sending: '+JSON.stringify(review));
+    console.log('sending: '+JSON.stringify(jsonDoc));
     
-    errors = [];
+    
     return $.ajax({
-        url: '/save_review',
+        url: '/save_review_rating',
         type: 'PUT',
         beforeSend: function (xhr) { 
-            $('#submitGif'+reviewID).css('display', 'inherit'); 
             xhr.setRequestHeader('Authorization', 'Basic '+token);
         },
         dataType: 'json',
         contentType: 'application/json;charset=UTF-8',
-        data: JSON.stringify(review),
+        data: JSON.stringify(jsonDoc),
         success: function(response) {
-            refillSubmittedReview(response);
-            proposalEsoId = response.review.proposal_eso_id;
-            updateSavedBadge(reviewID);
+            refillSubmittedReviewRating(response);
     
-            $('#errorAlert'+reviewID).slideUp();
-            $('#successAlert'+reviewID).html('Review for '+proposalEsoId+' saved successfully.');
-            $('#successAlert'+reviewID).slideDown();  
-            $('#saveButton'+reviewID).addClass('btn-success');
-            $('#saveButton'+reviewID).removeClass('btn-primary');
-            $('#saveButton'+reviewID).html('✔ Saved (Click to Close)');
-            $('#saveButton'+reviewID).attr('onclick', "collapseAndChangeSaveButton("+reviewID+");");
-
             console.log('received: '+JSON.stringify(response));
-
-            toggleSubmitAllButtonAccess();
         },
         error: function(response) {
-            redBadge('badgeSaved'+reviewID, 'Error saving!');
-            $('#successAlert'+reviewID).slideUp();
-            $('#errorAlert'+reviewID).html('Error: '+JSON.parse(response.responseText).Error);
-            $('#errorAlert'+reviewID).slideDown();
-            console.log(response.status+": "+response.responseText);
-            errors.push(reviewID);
+            // show error
         },
         complete: function() {
-            $('#submitGif'+reviewID).css('display', 'none');
+            {# $('#submitGif'+reviewID).css('display', 'none'); #}
         }
-    }); #}
+    });
 };
 
+// endpoint should return a doc like: {'review_id': 13, 'review_rating': {'id': 7, 'referee_id': 55, 'proposal_id': 99, 'review_rating': 3}}
 function refillSubmittedReviewRating(json) {
-    // TODO: set buttons to what was returned from ajax
-    {# review = json.review
-    reviewID = review.id
-    $('#comment'+reviewID).val(review.comment);
-    $('#ref_knowledge'+reviewID+' option').prop('selected', false);
-    $('#ref_knowledge'+reviewID+' option[value='+review.ref_knowledge+']').prop('selected', true);
-    $('#score'+reviewID).val(review.score);
-    $('#conflicted'+reviewID+' option').prop('selected', false);
-    $('#conflicted'+reviewID+' option[value='+review.conflicted+']').prop('selected', true);
-    $('#last_updated'+reviewID).val(review.last_updated);
-    $('#is_complete'+reviewID).val(json.is_complete); #}
+    reviewID = json.review_id
+    review_rating = json.review_rating
+    if (review_rating.review_rating > 0) {
+        $('input[name=rank'+reviewID+'][value="'+review_rating.review_rating+'"]').prop('checked', true);
+    }
+    setButtonStyle(reviewID);
 }
 
 $(document).ready(function () {
@@ -208,6 +181,9 @@ $(document).ready(function () {
             <div class="card review my-3" id="review{{ review.id }}">
             
                 <div class="card-body">
+                    <input type="hidden" id="referee_id{{ review.id }}" value="{{ review.referee_id }}">
+                    <input type="hidden" id="proposal_id{{ review.id }}" value="{{ review.proposal_id }}">
+
                     {% if no_review %}
                         <p class="text-center"><em>No comment—this reviewer either did not respond or was conflicted.</em></p>
                     {% else %}
@@ -218,27 +194,21 @@ $(document).ready(function () {
                     <div class="text-center">
                         <span>Rate this review:</span><br>
                         <small class="text-muted">not useful</small>
-                        {# <div class="btn-group btn-group-sm" role="group" aria-label="First group">
-                            <button type="button" class="btn btn-danger">1</button>
-                            <button type="button" class="btn btn-warning">2</button>
-                            <button type="button" class="btn btn-warning">3</button>
-                            <button type="button" class="btn btn-success">4</button>
-                        </div> #}
                         <div class="btn-group btn-group-sm btn-group-toggle" role="group" data-toggle="buttons">
                             <label class="btn btnLabel{{ review.id }}">
-                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_one" value="1" autocomplete="off" onchange="setButtonStyle({{ review.id }});"
+                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_one" value="1" autocomplete="off" onchange="submitReviewRating({{ review.id }});"
                                 {% if assigned_rating == 1 %}checked{% endif %}>1
                             </label>
                             <label class="btn btnLabel{{ review.id }}">
-                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_two" value="2" autocomplete="off" onchange="setButtonStyle({{ review.id }});"
+                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_two" value="2" autocomplete="off" onchange="submitReviewRating({{ review.id }});"
                                 {% if assigned_rating == 2 %}checked{% endif %}>2
                             </label>
                             <label class="btn btnLabel{{ review.id }}">
-                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_three" value="3" autocomplete="off" onchange="setButtonStyle({{ review.id }});"
+                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_three" value="3" autocomplete="off" onchange="submitReviewRating({{ review.id }});"
                                 {% if assigned_rating == 3 %}checked{% endif %}>3
                             </label>
                             <label class="btn btnLabel{{ review.id }}">
-                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_four" value="4" autocomplete="off" onchange="setButtonStyle({{ review.id }});"
+                                <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_four" value="4" autocomplete="off" onchange="submitReviewRating({{ review.id }});"
                                 {% if assigned_rating == 4 %}checked{% endif %}>4
                             </label>
                         </div>
