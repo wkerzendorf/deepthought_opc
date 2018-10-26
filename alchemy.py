@@ -15,7 +15,7 @@ class Referee(Base):
     id = Column(Integer, primary_key=True)
     uuid = Column(String(length=100), nullable=False)
     accepted_tou = Column(Boolean, default=False)
-    proposal_submitted_id = Column(Integer, ForeignKey('reviews.proposal_id'))
+    proposal_submitted_id = Column(Integer)
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
