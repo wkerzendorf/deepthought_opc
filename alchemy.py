@@ -19,7 +19,7 @@ class Referee(Base):
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
-    reviews = relationship('Review', foreign_keys='reviews.referee_id')
+    
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
     feedback = Column(Text, default='')
@@ -66,6 +66,7 @@ class Review(Base):
 
     proposal = relationship('Proposal')
     referee = relationship('Referee')
+    reviews = relationship('Review', backref='reviews_assigned')
 
     # update self's properties based on received JSON document
     def update_from_json(self, json):
