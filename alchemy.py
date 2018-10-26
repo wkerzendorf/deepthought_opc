@@ -19,12 +19,12 @@ class Referee(Base):
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
-    
+    reviews = relationship('Review')
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
-    reviews_received = relationship('Review', foreign_keys=[proposal_submitted_id])
+    reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
     
@@ -66,7 +66,6 @@ class Review(Base):
 
     proposal = relationship('Proposal')
     referee = relationship('Referee')
-    reviews = relationship('Review', backref='reviews_assigned')
 
     # update self's properties based on received JSON document
     def update_from_json(self, json):
