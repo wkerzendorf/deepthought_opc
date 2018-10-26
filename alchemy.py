@@ -15,6 +15,7 @@ class Referee(Base):
     id = Column(Integer, primary_key=True)
     uuid = Column(String(length=100), nullable=False)
     accepted_tou = Column(Boolean, default=False)
+    proposal_submitted_id = Column(Integer, ForeignKey('reviews.proposal_id'))
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
@@ -23,7 +24,7 @@ class Referee(Base):
     backref='referees')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
-
+    reviews_received = relationship('Review', foreign_keys=[proposal_submitted_id])
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
     
@@ -159,7 +160,7 @@ class ReviewRating(Base):
 
     def update_from_json(self, json):
         rating = int(json['review_rating'])
-        self.review_rating = rating if rating > 0 else None;
+        self.review_rating = rating if rating > 0 else None
     
     def to_json(self):
         rating_json = {}
