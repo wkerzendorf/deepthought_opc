@@ -19,17 +19,25 @@ class Referee(Base):
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
-    reviews = relationship('Review', primaryjoin="Referee.id==Review.referee_id")
+    reviews = relationship('Review')
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
-    reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
+    #reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
     
     def completed_all_reviews(self):
         return all([review.is_complete() for review in self.reviews])
+
+#class ProposalSubmitted(Base):
+#    __tablename__ = 'proposal_submitted'
+#
+#    id = Column(Integer, primary_key=True)
+#    referee_id = 
+#    proposal_id = Column(Integer, ForeignKey('proposals.id'))
+
 
 class Proposal(Base):
     __tablename__  = 'proposals'
