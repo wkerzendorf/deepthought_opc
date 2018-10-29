@@ -72,8 +72,8 @@ class Review(Base):
     # direct competitor = 2
     conflicted = Column(Integer, default=0)
 
-    proposal = relationship('Proposal')
-    referee = relationship('Referee')
+    proposal = relationship('Proposal', foreign_keys=[Review.proposal_id])
+    referee = relationship('Referee', foreign_keys=[Review.referee_id])
 
     # update self's properties based on received JSON document
     def update_from_json(self, json):
