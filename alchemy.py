@@ -21,7 +21,7 @@ class Referee(Base):
     #email = Column(String(250))
     reviews = relationship('Review', foreign_keys='Review.referee_id')
     proposals = relationship('Proposal', secondary='reviews', 
-    backref='referees', foreign_keys='Review.referee_id')
+    backref='referees', foreign_keys='[Review.referee_id, Review.proposal_id]')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
     reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
