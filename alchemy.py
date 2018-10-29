@@ -19,7 +19,7 @@ class Referee(Base):
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
-    reviews = relationship('Review', foreign_keys=['Review.referee_id'])
+    reviews = relationship('Review', foreign_keys='Review.referee_id')
     proposals = relationship('Proposal', secondary='reviews', 
     backref='referees')
     feedback = Column(Text, default='')
