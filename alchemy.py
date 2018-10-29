@@ -15,7 +15,7 @@ class Referee(Base):
     id = Column(Integer, primary_key=True)
     uuid = Column(String(length=100), nullable=False)
     accepted_tou = Column(Boolean, default=False)
-    proposal_submitted_id = Column(Integer)
+    proposal_submitted_id = Column(Integer, ForeignKey('Review.proposal_id'))
     #first_name = Column(String(250), nullable=False)
     #last_name = Column(String(250), nullable=False)
     #email = Column(String(250))
@@ -24,7 +24,7 @@ class Referee(Base):
     backref='referees')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
-    #reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
+    reviews_received = relationship('Review', primaryjoin="Referee.proposal_submitted_id==Review.proposal_id")
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
     
