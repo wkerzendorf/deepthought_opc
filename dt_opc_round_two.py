@@ -1,8 +1,9 @@
 import os
+import numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from alchemy import Referee, Base, Proposal, Review, ReviewRating
+from alchemy import Referee, Base, Proposal, Review, ReviewRating, ScoreQuantile
 import cherrypy
 from cherrypy.lib.static import serve_file
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
@@ -84,13 +85,25 @@ class DTOPC(object):
         # reviews_for_pi = self.db.query(Review).filter_by(proposal_id=pi_proposal)
         reviews_for_pi = referee.reviews_received;
         
+        scores = [review.score for review in reviews_for_pi if review.score is not None]
+        pi_avg_score = np.mean(scores)
+        quartiles = self.db.query(ScoreQuantile).all()
+        if pi_avg_score <= quartiles[0].score:
+            quartile = '1st'
+        elif pi_avg_score <= quartiles[1].score:
+            quartile = '2nd'
+        elif pi_avg_score <= quartiles[2].score:
+            quartile = '3rd'
+        else:
+            quartile = '4th'
+        
         # fetch ratings the PI has already made, for display
         ratings_of_pi = self.db.query(ReviewRating).filter_by(proposal_id=pi_proposal)
         ratings = {rating.referee_id: rating.review_rating for rating in ratings_of_pi}
 
         template = env.get_template('show_reviews_for_pi.html.j2')
 
-        return template.render(ref_id=ref_id, user_token=user_token, reviews_for_pi=reviews_for_pi, ratings=ratings)
+        return template.render(ref_id=ref_id, user_token=user_token, quartile=quartile, reviews_for_pi=reviews_for_pi, ratings=ratings)
 
     
     @cherrypy.expose

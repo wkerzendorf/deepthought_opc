@@ -169,11 +169,14 @@ $(document).ready(function () {
             <p>Many thanks from all the ESO team for your support!</p>
 
             <div style="padding-top: 2em;"></div>
-
+            <div class="alert alert-primary text-center">
+            Scoring: your proposal was in the <strong>{{ quartile }}</strong> quartile.
+            </div>
+            <div style="padding-top: 2em;"></div>
+            
             <h2>Reviews of your proposal:</h2>
 
             <form method="post">
-                       
             {% for review in reviews_for_pi %}
             {% set assigned_rating = ratings[review.referee_id] if review.referee_id in ratings else 0 %}
             {% set no_review = review.comment == None or review.conflicted > 0  %}

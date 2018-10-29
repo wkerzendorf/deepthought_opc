@@ -180,3 +180,10 @@ class ReviewRating(Base):
         
         return rating_json
 
+
+class ScoreQuantile(Base):
+    __tablename__ = 'score_quantiles'
+
+    id = Column(Integer, primary_key=True)
+    quantile_name = Column(Float)
+    score = Column(Float)
