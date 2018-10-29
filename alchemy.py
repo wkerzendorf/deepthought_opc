@@ -24,7 +24,7 @@ class Referee(Base):
     backref='referees', foreign_keys='[Review.referee_id, Review.proposal_id]')
     feedback = Column(Text, default='')
     finalized_submission = Column(Boolean, default=False)
-    reviews_received = relationship('Review', foreign_keys='Referee.proposal_submitted_id')
+    reviews_received = relationship('Review', foreign_keys='Referee.proposal_submitted_id', uselist=True)
     def __repr__(self):
         return "<Referee {0}>".format(self.uuid)
     
