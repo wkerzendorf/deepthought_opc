@@ -79,9 +79,10 @@ class DTOPC(object):
 
         id_and_password = ref_id+':'+ref_id
         user_token = base64.b64encode(id_and_password.encode('ascii')).decode('ascii')
-        # TODO: way to get PI's proposal using their ref_id
-        pi_proposal = 1
-        reviews_for_pi = self.db.query(Review).filter_by(proposal_id=pi_proposal)
+        # pi_proposal = 1
+        pi_proposal = referee.proposal_submitted_id;
+        # reviews_for_pi = self.db.query(Review).filter_by(proposal_id=pi_proposal)
+        reviews_for_pi = referee.reviews_received;
         
         # fetch ratings the PI has already made, for display
         ratings_of_pi = self.db.query(ReviewRating).filter_by(proposal_id=pi_proposal)
