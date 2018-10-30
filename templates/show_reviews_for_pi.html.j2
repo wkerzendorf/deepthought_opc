@@ -196,7 +196,7 @@ $(document).ready(function () {
                     {% if not no_review %}
                     <div class="text-center">
                         <span>Rate this review:</span><br>
-                        <small class="text-muted">not useful</small>
+                        <small class="text-muted">not helpful</small>
                         <div class="btn-group btn-group-sm btn-group-toggle" role="group" data-toggle="buttons">
                             <label class="btn btnLabel{{ review.id }}">
                                 <input type="radio" name="rank{{ review.id }}" id="rank{{ review.id }}_one" value="1" autocomplete="off" onchange="submitReviewRating({{ review.id }});"
@@ -215,7 +215,7 @@ $(document).ready(function () {
                                 {% if assigned_rating == 4 %}checked{% endif %}>4
                             </label>
                         </div>
-                        <small class="text-muted">very useful</small>
+                        <small class="text-muted">very helpful</small>
 
                         <div class="my-1 invisible" id="clearButton{{ review.id }}">
                             <button type="button" class="btn btn-xs btn-secondary" onclick="clearRating({{ review.id }});">Clear rating</button>
